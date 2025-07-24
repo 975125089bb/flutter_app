@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 //TODO: Step 2 - Import the rFlutter_Alert package here.
-import 'characters_data.dart';
-import 'character.dart';
+import 'data/characters_data.dart';
+import 'data/character.dart';
 import 'screens/home_screen.dart';
 
 void main() => runApp(const MyApp());
