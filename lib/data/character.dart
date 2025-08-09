@@ -10,7 +10,6 @@ class Character {
   final DateTime lastActive;
   final String profession;
   bool isBookmarked;
-  bool isMatched;
   bool isLiked;
   bool isRejected;
 
@@ -26,7 +25,6 @@ class Character {
     required this.lastActive,
     required this.profession,
     this.isBookmarked = false,
-    this.isMatched = false,
     this.isLiked = false,
     this.isRejected = false,
   });
@@ -55,7 +53,6 @@ class Character {
     DateTime? lastActive,
     String? profession,
     bool? isBookmarked,
-    bool? isMatched,
     bool? isLiked,
     bool? isRejected,
   }) {
@@ -71,7 +68,6 @@ class Character {
       lastActive: lastActive ?? this.lastActive,
       profession: profession ?? this.profession,
       isBookmarked: isBookmarked ?? this.isBookmarked,
-      isMatched: isMatched ?? this.isMatched,
       isLiked: isLiked ?? this.isLiked,
       isRejected: isRejected ?? this.isRejected,
     );
