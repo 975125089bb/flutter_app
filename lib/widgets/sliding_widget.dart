@@ -171,14 +171,6 @@ class SlidingPanel extends StatelessWidget {
           MaterialPageRoute(builder: (context) => const BookmarksScreen()),
         );
         break;
-      case '/profile':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile screen coming soon!'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        break;
       case '/settings':
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
