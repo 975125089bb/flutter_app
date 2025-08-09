@@ -51,6 +51,68 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     );
   }
 
+  void _handleNote(Character character) {
+    showDialog(
+      context: context,
+      builder: (context) => _buildNoteDialog(character),
+    );
+  }
+
+  Widget _buildNoteDialog(Character character) {
+    final TextEditingController noteController = TextEditingController();
+    noteController.text = character.note;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(Icons.note_alt, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 8),
+          Expanded(child: Text('Note for ${character.name}')),
+        ],
+      ),
+      content: TextField(
+        controller: noteController,
+        maxLines: 4,
+        decoration: const InputDecoration(
+          hintText: 'Add a note about this person...',
+          border: OutlineInputBorder(),
+        ),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              final index = characters.indexWhere((c) => c.id == character.id);
+              if (index != -1) {
+                characters[index] = characters[index].copyWith(
+                  note: noteController.text.trim(),
+                );
+              }
+            });
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  noteController.text.trim().isEmpty
+                      ? 'Note removed for ${character.name}'
+                      : 'Note saved for ${character.name}',
+                ),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          },
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,24 +130,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                 return CharacterCard(
                   character: character,
                   onBookmark: () => _toggleBookmark(character),
-                  onLike: () {
-                    // Handle like action
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Liked ${character.name}!'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  },
-                  onReject: () {
-                    // Handle reject action
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Passed on ${character.name}'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  },
+                  onNote: () => _handleNote(character),
                 );
               },
             ),

@@ -12,6 +12,7 @@ class Character {
   bool isBookmarked;
   bool isLiked;
   bool isRejected;
+  String note;
 
   Character({
     required this.id,
@@ -27,6 +28,7 @@ class Character {
     this.isBookmarked = false,
     this.isLiked = false,
     this.isRejected = false,
+    this.note = '',
   });
 
   // Helper method to get activity status
@@ -55,6 +57,7 @@ class Character {
     bool? isBookmarked,
     bool? isLiked,
     bool? isRejected,
+    String? note,
   }) {
     return Character(
       id: id ?? this.id,
@@ -70,6 +73,7 @@ class Character {
       isBookmarked: isBookmarked ?? this.isBookmarked,
       isLiked: isLiked ?? this.isLiked,
       isRejected: isRejected ?? this.isRejected,
+      note: note ?? this.note,
     );
   }
 }

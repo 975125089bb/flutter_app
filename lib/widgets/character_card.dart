@@ -3,16 +3,14 @@ import 'package:flutter/material.dart';
 
 class CharacterCard extends StatelessWidget {
   final Character character;
-  final VoidCallback? onLike;
-  final VoidCallback? onReject;
   final VoidCallback? onBookmark;
+  final VoidCallback? onNote;
 
   const CharacterCard({
     super.key,
     required this.character,
-    this.onLike,
-    this.onReject,
     this.onBookmark,
+    this.onNote,
   });
 
   @override
@@ -94,6 +92,23 @@ class CharacterCard extends StatelessWidget {
                         character.isBookmarked
                             ? Icons.bookmark
                             : Icons.bookmark_border,
+                        color: Colors.white,
+                      ),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black26,
+                        shape: const CircleBorder(),
+                      ),
+                    ),
+                  ),
+
+                  // Note button
+                  Positioned(
+                    top: 16,
+                    left: 64, // Position next to bookmark button
+                    child: IconButton(
+                      onPressed: onNote,
+                      icon: Icon(
+                        character.note.isNotEmpty ? Icons.note : Icons.note_add,
                         color: Colors.white,
                       ),
                       style: IconButton.styleFrom(
@@ -226,66 +241,8 @@ class CharacterCard extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Action buttons
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                border: Border(top: BorderSide(color: Colors.grey.shade200)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildActionButton(
-                    icon: Icons.close,
-                    color: Colors.red,
-                    onPressed: onReject,
-                  ),
-                  _buildActionButton(
-                    icon: Icons.favorite,
-                    color: Colors.green,
-                    onPressed: onLike,
-                  ),
-                  _buildActionButton(
-                    icon: Icons.chat,
-                    color: Colors.blue,
-                    onPressed: () {
-                      // TODO: Implement chat functionality
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Chat with ${character.name}'),
-                          duration: const Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color color,
-    VoidCallback? onPressed,
-  }) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        shape: BoxShape.circle,
-        border: Border.all(color: color.withOpacity(0.3), width: 2),
-      ),
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(icon, color: color),
-        iconSize: 28,
       ),
     );
   }

@@ -84,14 +84,11 @@ class _HomeScreenState extends State<HomeScreen> {
         case LogicalKeyboardKey.arrowLeft:
           _previousCard();
           return KeyEventResult.handled;
-        case LogicalKeyboardKey.arrowUp:
-          _handleLike(_filteredCharacters[_currentIndex]);
-          return KeyEventResult.handled;
-        case LogicalKeyboardKey.arrowDown:
-          _handleReject(_filteredCharacters[_currentIndex]);
-          return KeyEventResult.handled;
         case LogicalKeyboardKey.enter:
           _handleBookmark(_filteredCharacters[_currentIndex]);
+          return KeyEventResult.handled;
+        case LogicalKeyboardKey.keyN:
+          _handleNote(_filteredCharacters[_currentIndex]);
           return KeyEventResult.handled;
         case LogicalKeyboardKey.keyF:
           _showFilterDialog();
@@ -155,34 +152,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleLike(Character character) {
-    setState(() {
-      final index = characters.indexWhere((c) => c.id == character.id);
-      if (index != -1) {
-        characters[index] = characters[index].copyWith(isLiked: true);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('You liked ${character.name}!'),
-            duration: const Duration(seconds: 1),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    });
-    _nextCard();
-  }
-
-  void _handleReject(Character character) {
-    setState(() {
-      final index = characters.indexWhere((c) => c.id == character.id);
-      if (index != -1) {
-        characters[index] = characters[index].copyWith(isRejected: true);
-      }
-    });
-    _nextCard();
-  }
-
   void _handleBookmark(Character character) {
     setState(() {
       final index = characters.indexWhere((c) => c.id == character.id);
@@ -203,6 +172,68 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     });
+  }
+
+  void _handleNote(Character character) {
+    showDialog(
+      context: context,
+      builder: (context) => _buildNoteDialog(character),
+    );
+  }
+
+  Widget _buildNoteDialog(Character character) {
+    final TextEditingController noteController = TextEditingController();
+    noteController.text = character.note;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Icon(Icons.note_alt, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 8),
+          Expanded(child: Text('Note for ${character.name}')),
+        ],
+      ),
+      content: TextField(
+        controller: noteController,
+        maxLines: 4,
+        decoration: const InputDecoration(
+          hintText: 'Add a note about this person...',
+          border: OutlineInputBorder(),
+        ),
+        autofocus: true,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              final index = characters.indexWhere((c) => c.id == character.id);
+              if (index != -1) {
+                characters[index] = characters[index].copyWith(
+                  note: noteController.text.trim(),
+                );
+              }
+            });
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  noteController.text.trim().isEmpty
+                      ? 'Note removed for ${character.name}'
+                      : 'Note saved for ${character.name}',
+                ),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          },
+          child: const Text('Save'),
+        ),
+      ],
+    );
   }
 
   void _nextCard() {
@@ -248,9 +279,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             _buildControlItem('→ / Space', 'Next profile'),
             _buildControlItem('← ', 'Previous profile'),
-            _buildControlItem('↑ ', 'Like profile'),
-            _buildControlItem('↓ ', 'Reject profile'),
             _buildControlItem('Enter', 'Bookmark profile'),
+            _buildControlItem('N', 'Add/edit note'),
             _buildControlItem('F', 'Open filters'),
             _buildControlItem('H / F1', 'Show this help'),
             const SizedBox(height: 16),
@@ -261,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             _buildControlItem('Click & Drag', 'Swipe profiles'),
             _buildControlItem('Mouse Wheel', 'Navigate profiles'),
-            _buildControlItem('Button Clicks', 'Like/Reject/Chat'),
+            _buildControlItem('Button Clicks', 'Bookmark/Note'),
           ],
         ),
         actions: [
@@ -450,9 +480,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               final character = _filteredCharacters[index];
                               return CharacterCard(
                                 character: character,
-                                onLike: () => _handleLike(character),
-                                onReject: () => _handleReject(character),
                                 onBookmark: () => _handleBookmark(character),
+                                onNote: () => _handleNote(character),
                               );
                             },
                           ),
