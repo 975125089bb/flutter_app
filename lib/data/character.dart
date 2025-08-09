@@ -35,7 +35,7 @@ class Character {
   String get activityStatus {
     final now = DateTime.now();
     final difference = now.difference(lastActive);
-    
+
     if (difference.inMinutes < 15) return 'Online';
     if (difference.inHours < 24) return 'Active ${difference.inHours}h ago';
     if (difference.inDays < 7) return 'Active ${difference.inDays}d ago';

@@ -22,7 +22,9 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
 
   void _loadBookmarks() {
     setState(() {
-      _bookmarkedCharacters = CharacterService.getBookmarkedCharacters(characters);
+      _bookmarkedCharacters = CharacterService.getBookmarkedCharacters(
+        characters,
+      );
     });
   }
 
@@ -40,7 +42,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          character.isBookmarked 
+          character.isBookmarked
               ? 'Removed ${character.name} from bookmarks'
               : 'Added ${character.name} to bookmarks',
         ),
@@ -95,25 +97,18 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.bookmark_border,
-            size: 80,
-            color: Colors.grey.shade400,
-          ),
+          Icon(Icons.bookmark_border, size: 80, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
             'No bookmarks yet',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.grey.shade600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 8),
           Text(
             'Bookmark profiles you want to revisit',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(

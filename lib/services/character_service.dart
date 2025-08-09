@@ -8,7 +8,7 @@ class CharacterService {
   ) {
     var filteredList = characters.where((character) {
       // Age filter
-      if (character.age < options.ageRange.min || 
+      if (character.age < options.ageRange.min ||
           character.age > options.ageRange.max) {
         return false;
       }
@@ -74,17 +74,20 @@ class CharacterService {
     return characters.where((character) => character.isMatched).toList();
   }
 
-  static int getCompatibilityScore(Character character, List<String> userInterests) {
+  static int getCompatibilityScore(
+    Character character,
+    List<String> userInterests,
+  ) {
     if (userInterests.isEmpty) return 50; // Default score
-    
-    final commonInterests = character.interests.where(
-      (interest) => userInterests.contains(interest)
-    ).length;
-    
-    final maxInterests = character.interests.length > userInterests.length 
-        ? character.interests.length 
+
+    final commonInterests = character.interests
+        .where((interest) => userInterests.contains(interest))
+        .length;
+
+    final maxInterests = character.interests.length > userInterests.length
+        ? character.interests.length
         : userInterests.length;
-        
+
     return ((commonInterests / maxInterests) * 100).round();
   }
 }

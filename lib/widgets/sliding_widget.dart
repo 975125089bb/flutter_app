@@ -58,10 +58,7 @@ class SlidingPanel extends StatelessWidget {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.pink.shade400,
-                          Colors.purple.shade400,
-                        ],
+                        colors: [Colors.pink.shade400, Colors.purple.shade400],
                       ),
                     ),
                     child: SafeArea(
@@ -97,21 +94,25 @@ class SlidingPanel extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   // Route Buttons
                   Expanded(
                     child: ListView(
                       padding: const EdgeInsets.all(8),
-                      children: routes.map((route) => _buildMenuItem(
-                        context,
-                        route["name"],
-                        route["icon"],
-                        route["color"],
-                        route["route"],
-                      )).toList(),
+                      children: routes
+                          .map(
+                            (route) => _buildMenuItem(
+                              context,
+                              route["name"],
+                              route["icon"],
+                              route["color"],
+                              route["route"],
+                            ),
+                          )
+                          .toList(),
                     ),
                   ),
-                  
+
                   // App version
                   Padding(
                     padding: const EdgeInsets.all(16),
@@ -141,9 +142,7 @@ class SlidingPanel extends StatelessWidget {
   ) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(10),
@@ -155,14 +154,9 @@ class SlidingPanel extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 15,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         onTap: () {
           onTogglePanel();
           _handleNavigation(context, route, title);
@@ -174,17 +168,13 @@ class SlidingPanel extends StatelessWidget {
   void _handleNavigation(BuildContext context, String? route, String title) {
     switch (route) {
       case '/matches':
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => const MatchesScreen(),
-          ),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => const MatchesScreen()));
         break;
       case '/bookmarks':
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => const BookmarksScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const BookmarksScreen()),
         );
         break;
       case '/profile':

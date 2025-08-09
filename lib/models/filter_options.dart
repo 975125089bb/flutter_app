@@ -1,9 +1,4 @@
-enum SortBy {
-  distance,
-  age,
-  recentActivity,
-  name,
-}
+enum SortBy { distance, age, recentActivity, name }
 
 enum AgeRange {
   all(18, 100, 'All ages'),

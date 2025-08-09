@@ -31,9 +31,7 @@ class _FilterDialogState extends State<FilterDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(20),
         constraints: const BoxConstraints(maxHeight: 600),
@@ -57,9 +55,9 @@ class _FilterDialogState extends State<FilterDialog> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -68,27 +66,27 @@ class _FilterDialogState extends State<FilterDialog> {
                     // Age Range
                     _buildSectionTitle('Age Range'),
                     _buildAgeRangeSelector(),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // Distance
                     _buildSectionTitle('Distance'),
                     _buildDistanceSelector(),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // Sort By
                     _buildSectionTitle('Sort By'),
                     _buildSortBySelector(),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // Interests
                     _buildSectionTitle('Interests'),
                     _buildInterestsSelector(),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // Additional Filters
                     _buildSectionTitle('Additional'),
                     _buildAdditionalFilters(),
@@ -96,9 +94,9 @@ class _FilterDialogState extends State<FilterDialog> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Action buttons
             Row(
               children: [
@@ -134,10 +132,7 @@ class _FilterDialogState extends State<FilterDialog> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-      ),
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
     );
   }
 
@@ -216,7 +211,9 @@ class _FilterDialogState extends State<FilterDialog> {
               selected: isSelected,
               onSelected: (selected) {
                 setState(() {
-                  final newInterests = List<String>.from(_options.selectedInterests);
+                  final newInterests = List<String>.from(
+                    _options.selectedInterests,
+                  );
                   if (selected) {
                     newInterests.add(interest);
                   } else {
