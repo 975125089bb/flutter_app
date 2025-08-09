@@ -1,11 +1,13 @@
 import 'package:date_app/constants/routes.dart';
 import 'package:date_app/widgets/character_card.dart';
-import 'package:date_app/widgets/expanding_widget.dart';
-import 'package:date_app/widgets/page_indicator.dart';
 import 'package:date_app/widgets/sliding_widget.dart';
+import 'package:date_app/widgets/filter_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../data/character.dart';
 import '../data/characters_data.dart';
+import '../models/filter_options.dart';
+import '../services/character_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,73 +19,387 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
-
+  
   bool _panelVisible = false;
-  double _panelPosition =
-      -0.7; // Starts hidden (0 = fully visible, -0.7 = hidden)
+  FilterOptions _filterOptions = const FilterOptions();
+  List<Character> _filteredCharacters = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _applyFilters();
+  }
+
+  void _applyFilters() {
+    setState(() {
+      _filteredCharacters = CharacterService.filterAndSort(characters, _filterOptions);
+      _currentIndex = 0;
+    });
+  }
+
+  void _applyFiltersWithAnimation() {
+    setState(() {
+      _filteredCharacters = CharacterService.filterAndSort(characters, _filterOptions);
+      _currentIndex = 0;
+    });
+    
+    // Only animate when called from user actions (not during init)
+    if (_filteredCharacters.isNotEmpty && _pageController.hasClients) {
+      _pageController.animateToPage(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
 
   void _togglePanel() {
     setState(() {
       _panelVisible = !_panelVisible;
-      _panelPosition = _panelVisible ? 0 : -0.7;
     });
   }
 
-  void _addCharacter() {
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => FilterDialog(
+        currentOptions: _filterOptions,
+        onApply: (newOptions) {
+          setState(() {
+            _filterOptions = newOptions;
+          });
+          _applyFiltersWithAnimation();
+        },
+      ),
+    );
+  }
+
+  void _handleLike(Character character) {
     setState(() {
-      characters.add(
-        Character(
-          id: "id",
-          name: "name",
-          description: "description",
-          imageUrl: "imageUrl",
-        ),
-      );
+      final index = characters.indexWhere((c) => c.id == character.id);
+      if (index != -1) {
+        characters[index] = characters[index].copyWith(isLiked: true);
+        
+        // Simulate a match (random chance)
+        if (DateTime.now().millisecondsSinceEpoch % 3 == 0) {
+          characters[index] = characters[index].copyWith(isMatched: true);
+          _showMatchDialog(characters[index]);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('You liked ${character.name}!'),
+              duration: const Duration(seconds: 1),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
     });
+    _nextCard();
+  }
+
+  void _handleReject(Character character) {
+    setState(() {
+      final index = characters.indexWhere((c) => c.id == character.id);
+      if (index != -1) {
+        characters[index] = characters[index].copyWith(isRejected: true);
+      }
+    });
+    _nextCard();
+  }
+
+  void _handleBookmark(Character character) {
+    setState(() {
+      final index = characters.indexWhere((c) => c.id == character.id);
+      if (index != -1) {
+        characters[index] = characters[index].copyWith(
+          isBookmarked: !characters[index].isBookmarked,
+        );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              characters[index].isBookmarked 
+                  ? 'Added ${character.name} to bookmarks'
+                  : 'Removed ${character.name} from bookmarks',
+            ),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    });
+  }
+
+  void _nextCard() {
+    if (_currentIndex < _filteredCharacters.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      _showNoMoreCardsDialog();
+    }
+  }
+
+  void _showMatchDialog(Character character) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                Colors.pink.shade300,
+                Colors.purple.shade300,
+              ],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.favorite,
+                color: Colors.white,
+                size: 60,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'It\'s a Match!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'You and ${character.name} liked each other!',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Colors.white),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                      child: const Text('Keep Swiping'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        // TODO: Navigate to chat
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Starting chat with ${character.name}...'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.pink.shade400,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                      child: const Text('Say Hello'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showNoMoreCardsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text('No more profiles'),
+        content: const Text('You\'ve seen all profiles that match your current filters. Try adjusting your filters to see more people.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showFilterDialog();
+            },
+            child: const Text('Adjust Filters'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    var sidePanelWidth = screenWidth * 0.3;
+    var sidePanelWidth = screenWidth * 0.75;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Date app'),
-        backgroundColor: Colors.green,
+        title: const Text(
+          'Discover',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        actions: [
+          // Filter button
+          IconButton(
+            onPressed: _showFilterDialog,
+            icon: Stack(
+              children: [
+                const Icon(Icons.tune),
+                if (_isFiltersActive())
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+        ),
       ),
       body: Stack(
         children: [
           // Main content area
           Column(
             children: [
+              // Filter info bar
+              if (_isFiltersActive())
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  color: Colors.blue.shade50,
+                  child: Row(
+                    children: [
+                      Icon(Icons.info, size: 16, color: Colors.blue.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Showing ${_filteredCharacters.length} profiles with active filters',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _filterOptions = const FilterOptions();
+                          });
+                          _applyFiltersWithAnimation();
+                        },
+                        child: const Text('Clear', style: TextStyle(fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                ),
+
               // Swipeable area
               Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: characters.length,
-                  onPageChanged: (index) {
-                    setState(() => _currentIndex = index);
-                  },
-                  itemBuilder: (context, index) {
-                    final character = characters[index];
-                    return CharacterCard(character: character);
-                  },
-                ),
+                child: _filteredCharacters.isEmpty
+                    ? _buildEmptyState()
+                    : PageView.builder(
+                        controller: _pageController,
+                        itemCount: _filteredCharacters.length,
+                        onPageChanged: (index) {
+                          setState(() => _currentIndex = index);
+                        },
+                        itemBuilder: (context, index) {
+                          final character = _filteredCharacters[index];
+                          return CharacterCard(
+                            character: character,
+                            onLike: () => _handleLike(character),
+                            onReject: () => _handleReject(character),
+                            onBookmark: () => _handleBookmark(character),
+                          );
+                        },
+                      ),
               ),
 
               // Page Indicator
-              PageIndicator(currentIndex: _currentIndex),
+              if (_filteredCharacters.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${_currentIndex + 1} of ${_filteredCharacters.length}',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Container(
+                        width: 100,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: (_currentIndex + 1) / _filteredCharacters.length,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
-
-          // Overlay Elements
-          // Backdrop Dimming (only when panel is open)
-          if (_panelVisible)
-            GestureDetector(
-              onTap: _togglePanel,
-              child: Container(color: Colors.black54),
-            ),
 
           SlidingPanel(
             panelVisible: _panelVisible,
@@ -92,8 +408,6 @@ class _HomeScreenState extends State<HomeScreen> {
             sidePanelWidth: sidePanelWidth,
             routes: routes,
           ),
-
-          // ExpandingFab(),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -103,7 +417,52 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         onPressed: _togglePanel,
       ),
-      // ExpandingFab(),
     );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.search_off,
+            size: 80,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No profiles found',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Try adjusting your filters to see more people',
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _showFilterDialog,
+            icon: const Icon(Icons.tune),
+            label: const Text('Adjust Filters'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isFiltersActive() {
+    return _filterOptions.ageRange != AgeRange.all ||
+           _filterOptions.distanceRange != DistanceRange.anywhere ||
+           _filterOptions.selectedInterests.isNotEmpty ||
+           _filterOptions.showOnlineOnly ||
+           !_filterOptions.hideRejected ||
+           _filterOptions.sortBy != SortBy.distance;
   }
 }
