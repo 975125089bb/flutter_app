@@ -1,5 +1,6 @@
 import 'package:date_app/constants/routes.dart';
 import 'package:date_app/widgets/character_card.dart';
+import 'package:date_app/widgets/expanding_widget.dart';
 import 'package:date_app/widgets/page_indicator.dart';
 import 'package:date_app/widgets/sliding_widget.dart';
 import 'package:flutter/material.dart';
@@ -84,14 +85,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(color: Colors.black54),
             ),
 
-          // Left-Side Sliding Panel
           SlidingPanel(
             panelVisible: _panelVisible,
             onTogglePanel: _togglePanel,
             screenWidth: MediaQuery.of(context).size.width,
-            sidePanelWidth: sidePanelWidth, // or whatever width you prefer
-            routes: routes, // your routes list
+            sidePanelWidth: sidePanelWidth,
+            routes: routes,
           ),
+
+          // ExpandingFab(),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -101,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         onPressed: _togglePanel,
       ),
+      // ExpandingFab(),
     );
   }
 }
