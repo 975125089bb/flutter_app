@@ -70,10 +70,6 @@ class CharacterService {
     return characters.where((character) => character.isBookmarked).toList();
   }
 
-  static List<Character> getMatchedCharacters(List<Character> characters) {
-    return characters.where((character) => character.isMatched).toList();
-  }
-
   static int getCompatibilityScore(
     Character character,
     List<String> userInterests,

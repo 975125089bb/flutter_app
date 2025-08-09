@@ -8,12 +8,6 @@ final List<Map<String, dynamic>> routes = [
     "route": "/",
   },
   {
-    "name": "Matches",
-    "icon": Icons.favorite,
-    "color": Colors.red,
-    "route": "/matches",
-  },
-  {
     "name": "Bookmarks",
     "icon": Icons.bookmark,
     "color": Colors.orange,

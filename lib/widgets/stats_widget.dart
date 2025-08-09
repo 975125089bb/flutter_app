@@ -13,7 +13,6 @@ class StatsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final matches = allCharacters.where((c) => c.isMatched).length;
     final bookmarks = allCharacters.where((c) => c.isBookmarked).length;
     final likes = allCharacters.where((c) => c.isLiked).length;
 
@@ -30,12 +29,6 @@ class StatsWidget extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStat(
-            icon: Icons.favorite,
-            label: 'Matches',
-            value: matches.toString(),
-            color: Colors.red,
-          ),
           _buildStat(
             icon: Icons.bookmark,
             label: 'Saved',

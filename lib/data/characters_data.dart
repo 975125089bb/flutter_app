@@ -29,7 +29,6 @@ final List<Character> characters = [
     distanceKm: 8.2,
     lastActive: DateTime.now().subtract(const Duration(hours: 2)),
     profession: 'Software Engineer',
-    isMatched: true, // Pre-matched for demo
     isLiked: true,
   ),
   Character(
@@ -73,7 +72,6 @@ final List<Character> characters = [
     distanceKm: 12.8,
     lastActive: DateTime.now().subtract(const Duration(days: 3)),
     profession: 'Medical Student',
-    isMatched: true, // Pre-matched for demo
     isLiked: true,
   ),
   Character(

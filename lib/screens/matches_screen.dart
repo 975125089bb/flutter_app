@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/character.dart';
 import '../data/characters_data.dart';
-import '../services/character_service.dart';
 
 class MatchesScreen extends StatefulWidget {
   const MatchesScreen({super.key});
@@ -11,17 +10,17 @@ class MatchesScreen extends StatefulWidget {
 }
 
 class _MatchesScreenState extends State<MatchesScreen> {
-  List<Character> _matchedCharacters = [];
+  List<Character> _likedCharacters = [];
 
   @override
   void initState() {
     super.initState();
-    _loadMatches();
+    _loadLikedCharacters();
   }
 
-  void _loadMatches() {
+  void _loadLikedCharacters() {
     setState(() {
-      _matchedCharacters = CharacterService.getMatchedCharacters(characters);
+      _likedCharacters = characters.where((c) => c.isLiked).toList();
     });
   }
 
@@ -29,24 +28,24 @@ class _MatchesScreenState extends State<MatchesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Matches'),
+        title: const Text('Liked Profiles'),
         backgroundColor: Colors.green.shade100,
         elevation: 0,
       ),
-      body: _matchedCharacters.isEmpty
+      body: _likedCharacters.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: _matchedCharacters.length,
+              itemCount: _likedCharacters.length,
               itemBuilder: (context, index) {
-                final character = _matchedCharacters[index];
-                return _buildMatchCard(character);
+                final character = _likedCharacters[index];
+                return _buildLikedCard(character);
               },
             ),
     );
   }
 
-  Widget _buildMatchCard(Character character) {
+  Widget _buildLikedCard(Character character) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -98,7 +97,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                'It\'s a match! 🎉',
+                'Liked! 💙',
                 style: TextStyle(
                   color: Colors.green.shade700,
                   fontSize: 12,
@@ -363,14 +362,14 @@ class _MatchesScreenState extends State<MatchesScreen> {
           Icon(Icons.favorite_border, size: 80, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
-            'No matches yet',
+            'No liked profiles yet',
             style: Theme.of(
               context,
             ).textTheme.headlineSmall?.copyWith(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 8),
           Text(
-            'Keep swiping to find your perfect match!',
+            'Start liking profiles to see them here!',
             style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
           ),
           const SizedBox(height: 24),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../screens/bookmarks_screen.dart';
-import '../screens/matches_screen.dart';
 
 class SlidingPanel extends StatelessWidget {
   final bool panelVisible;
@@ -167,11 +166,6 @@ class SlidingPanel extends StatelessWidget {
 
   void _handleNavigation(BuildContext context, String? route, String title) {
     switch (route) {
-      case '/matches':
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => const MatchesScreen()));
-        break;
       case '/bookmarks':
         Navigator.of(context).push(
           MaterialPageRoute(builder: (context) => const BookmarksScreen()),
