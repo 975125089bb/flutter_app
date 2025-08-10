@@ -176,7 +176,6 @@ class _FilterDialogState extends State<FilterDialog> {
     final sortOptions = {
       SortBy.distance: 'Distance',
       SortBy.age: 'Age',
-      SortBy.recentActivity: 'Recent Activity',
       SortBy.name: 'Name',
     };
 

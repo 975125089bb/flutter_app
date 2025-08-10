@@ -58,30 +58,6 @@ class CharacterCard extends StatelessWidget {
                         : null,
                   ),
 
-                  // Activity status indicator
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getActivityColor(),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        character.activityStatus,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-
                   // Bookmark button
                   Positioned(
                     top: 16,
@@ -245,14 +221,5 @@ class CharacterCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Color _getActivityColor() {
-    final now = DateTime.now();
-    final difference = now.difference(character.lastActive);
-
-    if (difference.inMinutes < 15) return Colors.green;
-    if (difference.inHours < 24) return Colors.orange;
-    return Colors.grey;
   }
 }

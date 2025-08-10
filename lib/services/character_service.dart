@@ -18,13 +18,6 @@ class CharacterService {
         return false;
       }
 
-      // Online filter
-      if (options.showOnlineOnly) {
-        final now = DateTime.now();
-        final difference = now.difference(character.lastActive);
-        if (difference.inMinutes > 15) return false;
-      }
-
       // Hide rejected
       if (options.hideRejected && character.isRejected) {
         return false;
@@ -48,8 +41,6 @@ class CharacterService {
           return a.distanceKm.compareTo(b.distanceKm);
         case SortBy.age:
           return a.age.compareTo(b.age);
-        case SortBy.recentActivity:
-          return b.lastActive.compareTo(a.lastActive); // Most recent first
         case SortBy.name:
           return a.name.compareTo(b.name);
       }
