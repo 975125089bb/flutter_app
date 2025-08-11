@@ -1,5 +1,5 @@
 class Prompt:
-    API_KEY = "sk-c86841710b604deb9cb20ef8d612a3d1"
+    API_KEY = "sk-d17e63eeef2d46f4bb404b2a05f125ce"
 
     system_prompt = """
     你是一个专业的信息提取助手。用户将提供包含个人信息的文本。
