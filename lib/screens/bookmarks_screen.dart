@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../data/character.dart';
-import '../data/characters_data.dart';
 import '../services/character_service.dart';
 import '../widgets/character_card.dart';
 
@@ -13,27 +12,44 @@ class BookmarksScreen extends StatefulWidget {
 
 class _BookmarksScreenState extends State<BookmarksScreen> {
   List<Character> _bookmarkedCharacters = [];
+  List<Character> _allCharacters = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadBookmarks();
+    _loadCharacters();
+  }
+
+  Future<void> _loadCharacters() async {
+    try {
+      final loadedCharacters = await CharacterService.loadCharacters();
+      setState(() {
+        _allCharacters = loadedCharacters;
+        _loadBookmarks();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _loadBookmarks() {
     setState(() {
       _bookmarkedCharacters = CharacterService.getBookmarkedCharacters(
-        characters,
+        _allCharacters,
       );
     });
   }
 
   void _toggleBookmark(Character character) {
     setState(() {
-      final index = characters.indexWhere((c) => c.id == character.id);
+      final index = _allCharacters.indexWhere((c) => c.id == character.id);
       if (index != -1) {
-        characters[index] = characters[index].copyWith(
-          isBookmarked: !characters[index].isBookmarked,
+        _allCharacters[index] = _allCharacters[index].copyWith(
+          isBookmarked: !_allCharacters[index].isBookmarked,
         );
         _loadBookmarks();
       }
@@ -88,9 +104,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
         ElevatedButton(
           onPressed: () {
             setState(() {
-              final index = characters.indexWhere((c) => c.id == character.id);
+              final index = _allCharacters.indexWhere(
+                (c) => c.id == character.id,
+              );
               if (index != -1) {
-                characters[index] = characters[index].copyWith(
+                _allCharacters[index] = _allCharacters[index].copyWith(
                   note: noteController.text.trim(),
                 );
               }
@@ -121,7 +139,21 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
         backgroundColor: Colors.pink.shade100,
         elevation: 0,
       ),
-      body: _bookmarkedCharacters.isEmpty
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(
+                    'Loading bookmarks...',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            )
+          : _bookmarkedCharacters.isEmpty
           ? _buildEmptyState()
           : PageView.builder(
               itemCount: _bookmarkedCharacters.length,

@@ -1,12 +1,10 @@
 import 'package:date_app/constants/routes.dart';
 import 'package:date_app/widgets/character_card.dart';
 import 'package:date_app/widgets/sliding_widget.dart';
-import 'package:date_app/widgets/filter_dialog.dart';
+import 'package:date_app/widgets/filter_dialog_enhanced.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/gestures.dart';
 import '../data/character.dart';
-import '../data/characters_data.dart';
 import '../models/filter_options.dart';
 import '../services/character_service.dart';
 
@@ -24,12 +22,14 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _panelVisible = false;
   FilterOptions _filterOptions = const FilterOptions();
   List<Character> _filteredCharacters = [];
+  List<Character> _allCharacters = [];
+  bool _isLoading = true;
   final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    _applyFilters();
+    _loadCharacters();
 
     // Show keyboard shortcuts hint after the first build
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -102,10 +102,77 @@ class _HomeScreenState extends State<HomeScreen> {
     return KeyEventResult.ignored;
   }
 
+  Future<void> _loadCharacters() async {
+    try {
+      final loadedCharacters = await CharacterService.loadCharacters();
+      setState(() {
+        _allCharacters = loadedCharacters;
+        _isLoading = false;
+        _applyFilters();
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading characters: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _reloadCharacters() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final loadedCharacters = await CharacterService.reloadCharacters();
+      setState(() {
+        _allCharacters = loadedCharacters;
+        _isLoading = false;
+        _applyFilters();
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.refresh, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Data reloaded successfully!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error reloading characters: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _applyFilters() {
+    if (_allCharacters.isEmpty) return;
+
     setState(() {
       _filteredCharacters = CharacterService.filterAndSort(
-        characters,
+        _allCharacters,
         _filterOptions,
       );
       _currentIndex = 0;
@@ -113,9 +180,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _applyFiltersWithAnimation() {
+    if (_allCharacters.isEmpty) return;
+
     setState(() {
       _filteredCharacters = CharacterService.filterAndSort(
-        characters,
+        _allCharacters,
         _filterOptions,
       );
       _currentIndex = 0;
@@ -138,10 +207,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showFilterDialog() {
+    final allInterests = CharacterService.getAllInterests(_allCharacters);
     showDialog(
       context: context,
       builder: (context) => FilterDialog(
         currentOptions: _filterOptions,
+        allInterests: allInterests,
         onApply: (newOptions) {
           setState(() {
             _filterOptions = newOptions;
@@ -154,16 +225,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleBookmark(Character character) {
     setState(() {
-      final index = characters.indexWhere((c) => c.id == character.id);
+      final index = _allCharacters.indexWhere((c) => c.id == character.id);
       if (index != -1) {
-        characters[index] = characters[index].copyWith(
-          isBookmarked: !characters[index].isBookmarked,
+        _allCharacters[index] = _allCharacters[index].copyWith(
+          isBookmarked: !_allCharacters[index].isBookmarked,
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              characters[index].isBookmarked
+              _allCharacters[index].isBookmarked
                   ? 'Added ${character.name} to bookmarks'
                   : 'Removed ${character.name} from bookmarks',
             ),
@@ -211,9 +282,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ElevatedButton(
           onPressed: () {
             setState(() {
-              final index = characters.indexWhere((c) => c.id == character.id);
+              final index = _allCharacters.indexWhere(
+                (c) => c.id == character.id,
+              );
               if (index != -1) {
-                characters[index] = characters[index].copyWith(
+                _allCharacters[index] = _allCharacters[index].copyWith(
                   note: noteController.text.trim(),
                 );
               }
@@ -377,6 +450,12 @@ class _HomeScreenState extends State<HomeScreen> {
           foregroundColor: Colors.black87,
           elevation: 0,
           actions: [
+            // Refresh button
+            IconButton(
+              onPressed: _reloadCharacters,
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Reload data from file',
+            ),
             // Help button
             IconButton(
               onPressed: _showControlsHelp,
@@ -411,133 +490,140 @@ class _HomeScreenState extends State<HomeScreen> {
             statusBarIconBrightness: Brightness.dark,
           ),
         ),
-        body: Stack(
-          children: [
-            // Main content area
-            Column(
-              children: [
-                // Filter info bar
-                if (_isFiltersActive())
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+        body: _isLoading
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text(
+                      'Loading profiles...',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    color: Colors.blue.shade50,
-                    child: Row(
-                      children: [
-                        Icon(Icons.info, size: 16, color: Colors.blue.shade700),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Showing ${_filteredCharacters.length} profiles with active filters',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue.shade700,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _filterOptions = const FilterOptions();
-                            });
-                            _applyFiltersWithAnimation();
-                          },
-                          child: const Text(
-                            'Clear',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Swipeable area
-                Expanded(
-                  child: _filteredCharacters.isEmpty
-                      ? _buildEmptyState()
-                      : Listener(
-                          onPointerSignal: (pointerSignal) {
-                            if (pointerSignal is PointerScrollEvent) {
-                              if (pointerSignal.scrollDelta.dy > 0) {
-                                // Scroll down = next card
-                                _nextCard();
-                              } else if (pointerSignal.scrollDelta.dy < 0) {
-                                // Scroll up = previous card
-                                _previousCard();
-                              }
-                            }
-                          },
-                          child: PageView.builder(
-                            controller: _pageController,
-                            itemCount: _filteredCharacters.length,
-                            onPageChanged: (index) {
-                              setState(() => _currentIndex = index);
-                            },
-                            itemBuilder: (context, index) {
-                              final character = _filteredCharacters[index];
-                              return CharacterCard(
-                                character: character,
-                                onBookmark: () => _handleBookmark(character),
-                                onNote: () => _handleNote(character),
-                              );
-                            },
-                          ),
-                        ),
+                  ],
                 ),
-
-                // Page Indicator
-                if (_filteredCharacters.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${_currentIndex + 1} of ${_filteredCharacters.length}',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
+              )
+            : Stack(
+                children: [
+                  // Main content area
+                  Column(
+                    children: [
+                      // Filter info bar
+                      if (_isFiltersActive())
                         Container(
-                          width: 100,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
-                            borderRadius: BorderRadius.circular(2),
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor:
-                                (_currentIndex + 1) /
-                                _filteredCharacters.length,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).primaryColor,
-                                borderRadius: BorderRadius.circular(2),
+                          color: Colors.blue.shade50,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.info,
+                                size: 16,
+                                color: Colors.blue.shade700,
                               ),
-                            ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Showing ${_filteredCharacters.length} profiles with active filters',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _filterOptions = const FilterOptions();
+                                  });
+                                  _applyFiltersWithAnimation();
+                                },
+                                child: const Text(
+                                  'Clear',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
 
-            SlidingPanel(
-              panelVisible: _panelVisible,
-              onTogglePanel: _togglePanel,
-              screenWidth: MediaQuery.of(context).size.width,
-              sidePanelWidth: sidePanelWidth,
-              routes: routes,
-            ),
-          ],
-        ),
+                      // Swipeable area
+                      Expanded(
+                        child: _filteredCharacters.isEmpty
+                            ? _buildEmptyState()
+                            : PageView.builder(
+                                controller: _pageController,
+                                itemCount: _filteredCharacters.length,
+                                onPageChanged: (index) {
+                                  setState(() => _currentIndex = index);
+                                },
+                                itemBuilder: (context, index) {
+                                  final character = _filteredCharacters[index];
+                                  return CharacterCard(
+                                    character: character,
+                                    onBookmark: () =>
+                                        _handleBookmark(character),
+                                    onNote: () => _handleNote(character),
+                                  );
+                                },
+                              ),
+                      ), // Page Indicator
+                      if (_filteredCharacters.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${_currentIndex + 1} of ${_filteredCharacters.length}',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Container(
+                                width: 100,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                                child: FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor:
+                                      (_currentIndex + 1) /
+                                      _filteredCharacters.length,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).primaryColor,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  SlidingPanel(
+                    panelVisible: _panelVisible,
+                    onTogglePanel: _togglePanel,
+                    screenWidth: MediaQuery.of(context).size.width,
+                    sidePanelWidth: sidePanelWidth,
+                    routes: routes,
+                  ),
+                ],
+              ),
         floatingActionButton: FloatingActionButton(
           child: AnimatedIcon(
             icon: AnimatedIcons.menu_close,

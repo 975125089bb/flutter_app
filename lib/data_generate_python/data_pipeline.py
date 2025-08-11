@@ -219,7 +219,7 @@ class DataPipeline:
 
         return self.run_full_pipeline(input_folder, csv_output, json_output)
 
-    def run_test_pipeline(self, test_file: str = "men_100.md", max_profiles: int = 5):
+    def run_test_pipeline(self, test_file: str = "men_100.md", max_profiles: int = 10):
         """Run a small test of the pipeline"""
 
         print("🧪 Running Test Pipeline")
@@ -308,7 +308,7 @@ def main():
     pipeline = DataPipeline(API_KEY)
 
     print("\nChoose an option:")
-    print("1. Run test pipeline (5 profiles, minimal cost)")
+    print("1. Run test pipeline (10 profiles, minimal cost)")
     print("2. Run full pipeline with cost estimation")
     print("3. Run custom pipeline (specify parameters)")
     print("4. Check prerequisites and estimate costs only")

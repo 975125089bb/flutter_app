@@ -1,7 +1,58 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import '../data/character.dart';
 import '../models/filter_options.dart';
 
 class CharacterService {
+  static List<Character>? _cachedCharacters;
+
+  /// Load characters from the JSON asset file
+  static Future<List<Character>> loadCharacters() async {
+    if (_cachedCharacters != null) {
+      return _cachedCharacters!;
+    }
+
+    try {
+      // Load the JSON file from assets
+      final String jsonString = await rootBundle.loadString(
+        'assets/test_characters.json',
+      );
+      final List<dynamic> jsonList = json.decode(jsonString);
+
+      // Convert JSON to Character objects
+      _cachedCharacters = jsonList
+          .map((json) => Character.fromJson(json))
+          .toList();
+
+      return _cachedCharacters!;
+    } catch (e) {
+      print('Error loading characters: $e');
+      // Return empty list if there's an error
+      return [];
+    }
+  }
+
+  /// Clear the cache to force reload on next call
+  static void clearCache() {
+    _cachedCharacters = null;
+  }
+
+  /// Force reload characters from JSON (bypasses cache)
+  static Future<List<Character>> reloadCharacters() async {
+    clearCache();
+    return await loadCharacters();
+  }
+
+  /// Get a character by ID
+  static Future<Character?> getCharacterById(String id) async {
+    final characters = await loadCharacters();
+    try {
+      return characters.firstWhere((character) => character.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
   static List<Character> filterAndSort(
     List<Character> characters,
     FilterOptions options,
@@ -13,9 +64,97 @@ class CharacterService {
         return false;
       }
 
+      // Height filter
+      if (character.height != null) {
+        if (character.height! < options.heightRange.min ||
+            character.height! > options.heightRange.max) {
+          return false;
+        }
+      } else if (options.heightRange != HeightRange.all) {
+        // If height filter is applied but character has no height data, exclude
+        return false;
+      }
+
+      // BMI filter
+      if (character.bmi != null) {
+        if (character.bmi! < options.bmiRange.min ||
+            character.bmi! > options.bmiRange.max) {
+          return false;
+        }
+      } else if (options.bmiRange != BMIRange.all) {
+        // If BMI filter is applied but character has no BMI data, exclude
+        return false;
+      }
+
       // Distance filter
       if (character.distanceKm > options.distanceRange.max) {
         return false;
+      }
+
+      // House requirement filter
+      if (options.requireHouse && (character.hasHouse != true)) {
+        return false;
+      }
+
+      // Car requirement filter
+      if (options.requireCar && (character.hasCar != true)) {
+        return false;
+      }
+
+      // Marital status filter
+      if (options.maritalStatus != MaritalStatusFilter.any) {
+        final statusMatch = character.maritalStatus?.toLowerCase();
+        switch (options.maritalStatus) {
+          case MaritalStatusFilter.single:
+            if (statusMatch != '单身' && statusMatch != 'single') return false;
+            break;
+          case MaritalStatusFilter.divorced:
+            if (statusMatch != '离婚' && statusMatch != 'divorced') return false;
+            break;
+          case MaritalStatusFilter.widowed:
+            if (statusMatch != '丧偶' && statusMatch != 'widowed') return false;
+            break;
+          case MaritalStatusFilter.any:
+            break;
+        }
+      }
+
+      // Education filter (basic implementation - could be enhanced with more data)
+      if (options.education != EducationFilter.any) {
+        final occupation = character.occupation.toLowerCase();
+        final rawText = character.rawText.toLowerCase();
+        switch (options.education) {
+          case EducationFilter.college:
+            if (!rawText.contains('大学') &&
+                !rawText.contains('学院') &&
+                !rawText.contains('college') &&
+                !rawText.contains('university')) {
+              return false;
+            }
+            break;
+          case EducationFilter.graduate:
+            if (!rawText.contains('硕士') &&
+                !rawText.contains('博士') &&
+                !rawText.contains('研究生') &&
+                !rawText.contains('master') &&
+                !rawText.contains('phd') &&
+                !rawText.contains('graduate')) {
+              return false;
+            }
+            break;
+          case EducationFilter.professional:
+            if (!occupation.contains('医生') &&
+                !occupation.contains('律师') &&
+                !occupation.contains('工程师') &&
+                !occupation.contains('doctor') &&
+                !occupation.contains('lawyer') &&
+                !occupation.contains('engineer')) {
+              return false;
+            }
+            break;
+          case EducationFilter.any:
+            break;
+        }
       }
 
       // Hide rejected
@@ -43,6 +182,14 @@ class CharacterService {
           return a.age.compareTo(b.age);
         case SortBy.name:
           return a.name.compareTo(b.name);
+        case SortBy.height:
+          // Sort by height (nulls last)
+          if (a.height == null && b.height == null) return 0;
+          if (a.height == null) return 1;
+          if (b.height == null) return -1;
+          return b.height!.compareTo(
+            a.height!,
+          ); // Descending order (tall first)
       }
     });
 

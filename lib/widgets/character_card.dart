@@ -21,41 +21,62 @@ class CharacterCard extends StatelessWidget {
         elevation: 8,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Column(
-          children: [
-            // Main profile image
-            Expanded(
-              flex: 3,
-              child: Stack(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Main profile image
+              Stack(
                 children: [
                   Container(
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                      image: character.imageUrl != null
-                          ? DecorationImage(
-                              image: NetworkImage(character.imageUrl!),
-                              fit: BoxFit.cover,
-                              onError: (error, stackTrace) {},
-                            )
-                          : null,
-                      gradient: character.imageUrl == null
-                          ? LinearGradient(
-                              colors: [
-                                Colors.blue.shade300,
-                                Colors.purple.shade300,
-                              ],
-                            )
-                          : null,
-                    ),
-                    child: character.imageUrl == null
-                        ? Center(
-                            child: Icon(
-                              Icons.person,
-                              size: 80,
-                              color: Colors.white,
-                            ),
+                    child: character.imageUrl != null
+                        ? Image.network(
+                            character.imageUrl!,
+                            width: double.infinity,
+                            fit: BoxFit
+                                .fitWidth, // Show full image width, adjust height automatically
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: double.infinity,
+                                height: 400,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.blue.shade300,
+                                      Colors.purple.shade300,
+                                    ],
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 80,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              );
+                            },
                           )
-                        : null,
+                        : Container(
+                            width: double.infinity,
+                            height: 400,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.blue.shade300,
+                                  Colors.purple.shade300,
+                                ],
+                              ),
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.person,
+                                size: 80,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                   ),
 
                   // Bookmark button
@@ -95,12 +116,9 @@ class CharacterCard extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
 
-            // Profile information
-            Expanded(
-              flex: 2,
-              child: Padding(
+              // Profile information
+              Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,12 +188,43 @@ class CharacterCard extends StatelessWidget {
                     const SizedBox(height: 12),
 
                     // Description
-                    Expanded(
-                      child: Text(
-                        character.description,
-                        style: const TextStyle(fontSize: 14),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
+                    SelectableText(
+                      character.description,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Raw text content
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Profile Details',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey.shade700,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          SelectableText(
+                            character.rawText,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
@@ -216,8 +265,8 @@ class CharacterCard extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
