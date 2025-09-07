@@ -139,7 +139,7 @@ class _FilterDialogState extends State<FilterDialog> {
           ],
         ),
       ),
-    );
+    )
   }
 
   Widget _buildSectionTitle(String title) {

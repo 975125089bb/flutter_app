@@ -9,13 +9,13 @@ class SlidingPanel extends StatelessWidget {
   final List<Map<String, dynamic>> routes;
 
   const SlidingPanel({
-    Key? key,
+    super.key,
     required this.panelVisible,
     required this.onTogglePanel,
     required this.screenWidth,
     required this.sidePanelWidth,
     required this.routes,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

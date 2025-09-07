@@ -42,7 +42,7 @@ class _FilterDialogState extends State<FilterDialog> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Advanced Filters',
+                  '高级筛选',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -63,61 +63,61 @@ class _FilterDialogState extends State<FilterDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Age Range
-                    _buildSectionTitle('Age Range'),
+                    _buildSectionTitle('年龄范围'),
                     _buildAgeRangeSelector(),
 
                     const SizedBox(height: 20),
 
                     // Height Range
-                    _buildSectionTitle('Height Range'),
+                    _buildSectionTitle('身高范围'),
                     _buildHeightRangeSelector(),
 
                     const SizedBox(height: 20),
 
                     // BMI Range
-                    _buildSectionTitle('BMI Range'),
+                    _buildSectionTitle('BMI范围'),
                     _buildBMIRangeSelector(),
 
                     const SizedBox(height: 20),
 
                     // Distance
-                    _buildSectionTitle('Distance'),
+                    _buildSectionTitle('距离'),
                     _buildDistanceSelector(),
 
                     const SizedBox(height: 20),
 
                     // Property Requirements
-                    _buildSectionTitle('Property & Assets'),
+                    _buildSectionTitle('财产资产'),
                     _buildPropertyRequirements(),
 
                     const SizedBox(height: 20),
 
                     // Marital Status
-                    _buildSectionTitle('Marital Status'),
+                    _buildSectionTitle('婚姻状况'),
                     _buildMaritalStatusSelector(),
 
                     const SizedBox(height: 20),
 
                     // Education Level
-                    _buildSectionTitle('Education Level'),
+                    _buildSectionTitle('教育程度'),
                     _buildEducationSelector(),
 
                     const SizedBox(height: 20),
 
                     // Sort By
-                    _buildSectionTitle('Sort By'),
+                    _buildSectionTitle('排序方式'),
                     _buildSortBySelector(),
 
                     const SizedBox(height: 20),
 
                     // Interests
-                    _buildSectionTitle('Interests'),
+                    _buildSectionTitle('兴趣爱好'),
                     _buildInterestsSelector(),
 
                     const SizedBox(height: 20),
 
                     // Other Options
-                    _buildSectionTitle('Other Options'),
+                    _buildSectionTitle('其他选项'),
                     _buildOtherOptions(),
                   ],
                 ),
@@ -132,7 +132,7 @@ class _FilterDialogState extends State<FilterDialog> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: _resetFilters,
-                    child: const Text('Reset'),
+                    child: const Text('重置'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -143,7 +143,7 @@ class _FilterDialogState extends State<FilterDialog> {
                       widget.onApply(_options);
                       Navigator.of(context).pop();
                     },
-                    child: const Text('Apply Filters'),
+                    child: const Text('应用筛选'),
                   ),
                 ),
               ],

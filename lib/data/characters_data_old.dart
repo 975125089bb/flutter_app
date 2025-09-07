@@ -1,4 +1,3 @@
-import 'character.dart';
 import '../services/character_service.dart';
 
 // Legacy compatibility - now loads from JSON
@@ -22,30 +21,30 @@ Future<void> initializeCharacters() async {
     profession: 'Entrepreneur',
   ),
   Character(
-    id: '5',
-    name: 'Olivia',
-    description:
+    id = '5',
+    name = 'Olivia',
+    description =
         'Medical student with a passion for helping others. Love dancing, cooking international cuisine, and weekend adventures.',
-    imageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400',
-    age: 24,
-    location: 'Boston, MA',
-    interests: ['Medicine', 'Dancing', 'Cooking', 'Volunteering', 'Books'],
-    distanceKm: 12.8,
-    profession: 'Medical Student',
-    isLiked: true,
+    imageUrl = 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400',
+    age = 24,
+    location = 'Boston, MA',
+    interests = ['Medicine', 'Dancing', 'Cooking', 'Volunteering', 'Books'],
+    distanceKm = 12.8,
+    profession = 'Medical Student',
+    isLiked = true,
   ),
   Character(
-    id: '6',
-    name: 'David',
-    description:
+    id = '6',
+    name = 'David',
+    description =
         'Musician and teacher who loves live concerts, outdoor activities, and deep conversations over good wine.',
-    imageUrl:
+    imageUrl =
         'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
-    age: 29,
-    location: 'Austin, TX',
-    interests: ['Music', 'Teaching', 'Wine', 'Concerts', 'Nature'],
-    distanceKm: 23.1,
-    profession: 'Music Teacher',
-    isLiked: true,
+    age = 29,
+    location = 'Austin, TX',
+    interests = ['Music', 'Teaching', 'Wine', 'Concerts', 'Nature'],
+    distanceKm = 23.1,
+    profession = 'Music Teacher',
+    isLiked = true,
   ),
 ];

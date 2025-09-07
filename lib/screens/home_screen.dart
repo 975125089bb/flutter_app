@@ -116,10 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading characters: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('加载用户数据时出错: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -145,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Icon(Icons.refresh, color: Colors.white),
                 SizedBox(width: 8),
-                Text('Data reloaded successfully!'),
+                Text('数据重新加载成功！'),
               ],
             ),
             backgroundColor: Colors.green,
@@ -159,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error reloading characters: $e'),
+            content: Text('重新加载用户数据时出错: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -235,8 +232,8 @@ class _HomeScreenState extends State<HomeScreen> {
           SnackBar(
             content: Text(
               _allCharacters[index].isBookmarked
-                  ? 'Added ${character.name} to bookmarks'
-                  : 'Removed ${character.name} from bookmarks',
+                  ? '已将 ${character.name} 添加到收藏夹'
+                  : '已将 ${character.name} 从收藏夹移除',
             ),
             duration: const Duration(seconds: 1),
           ),
@@ -262,14 +259,14 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Icon(Icons.note_alt, color: Theme.of(context).primaryColor),
           const SizedBox(width: 8),
-          Expanded(child: Text('Note for ${character.name}')),
+          Expanded(child: Text('${character.name} 的备注')),
         ],
       ),
       content: TextField(
         controller: noteController,
         maxLines: 4,
         decoration: const InputDecoration(
-          hintText: 'Add a note about this person...',
+          hintText: '为这个人添加备注...',
           border: OutlineInputBorder(),
         ),
         autofocus: true,
@@ -277,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: const Text('取消'),
         ),
         ElevatedButton(
           onPressed: () {
@@ -296,14 +293,14 @@ class _HomeScreenState extends State<HomeScreen> {
               SnackBar(
                 content: Text(
                   noteController.text.trim().isEmpty
-                      ? 'Note removed for ${character.name}'
-                      : 'Note saved for ${character.name}',
+                      ? '已删除 ${character.name} 的备注'
+                      : '已保存 ${character.name} 的备注',
                 ),
                 duration: const Duration(seconds: 1),
               ),
             );
           },
-          child: const Text('Save'),
+          child: const Text('保存'),
         ),
       ],
     );
@@ -338,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(Icons.keyboard, color: Theme.of(context).primaryColor),
             const SizedBox(width: 8),
-            const Text('Computer Controls'),
+            const Text('操作说明'),
           ],
         ),
         content: Column(
@@ -346,31 +343,31 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Keyboard Navigation:',
+              '键盘导航:',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 12),
-            _buildControlItem('→ / Space', 'Next profile'),
-            _buildControlItem('← ', 'Previous profile'),
-            _buildControlItem('Enter', 'Bookmark profile'),
-            _buildControlItem('N', 'Add/edit note'),
-            _buildControlItem('F', 'Open filters'),
-            _buildControlItem('H / F1', 'Show this help'),
+            _buildControlItem('→ / 空格', '下一个资料'),
+            _buildControlItem('← ', '上一个资料'),
+            _buildControlItem('回车', '收藏资料'),
+            _buildControlItem('N', '添加/编辑备注'),
+            _buildControlItem('F', '打开筛选'),
+            _buildControlItem('H / F1', '显示帮助'),
             const SizedBox(height: 16),
             const Text(
-              'Mouse Controls:',
+              '鼠标操作:',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 12),
-            _buildControlItem('Click & Drag', 'Swipe profiles'),
-            _buildControlItem('Mouse Wheel', 'Navigate profiles'),
-            _buildControlItem('Button Clicks', 'Bookmark/Note'),
+            _buildControlItem('点击拖拽', '滑动资料'),
+            _buildControlItem('鼠标滚轮', '导航资料'),
+            _buildControlItem('按钮点击', '收藏/备注'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Got it!'),
+            child: const Text('明白了！'),
           ),
         ],
       ),
@@ -410,21 +407,19 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('No more profiles'),
-        content: const Text(
-          'You\'ve seen all profiles that match your current filters. Try adjusting your filters to see more people.',
-        ),
+        title: const Text('没有更多资料了'),
+        content: const Text('您已查看了符合当前筛选条件的所有资料。尝试调整筛选条件以查看更多人的资料。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: const Text('确定'),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               _showFilterDialog();
             },
-            child: const Text('Adjust Filters'),
+            child: const Text('调整筛选'),
           ),
         ],
       ),
@@ -443,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
-            'Discover',
+            '发现',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.white,
@@ -454,13 +449,13 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(
               onPressed: _reloadCharacters,
               icon: const Icon(Icons.refresh),
-              tooltip: 'Reload data from file',
+              tooltip: '重新加载数据',
             ),
             // Help button
             IconButton(
               onPressed: _showControlsHelp,
               icon: const Icon(Icons.help_outline),
-              tooltip: 'Keyboard shortcuts (H)',
+              tooltip: '键盘快捷键 (H)',
             ),
             // Filter button
             IconButton(
@@ -546,7 +541,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   _applyFiltersWithAnimation();
                                 },
                                 child: const Text(
-                                  'Clear',
+                                  '清除',
                                   style: TextStyle(fontSize: 12),
                                 ),
                               ),
@@ -625,11 +620,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
         floatingActionButton: FloatingActionButton(
+          onPressed: _togglePanel,
           child: AnimatedIcon(
             icon: AnimatedIcons.menu_close,
             progress: AlwaysStoppedAnimation(_panelVisible ? 1 : 0),
           ),
-          onPressed: _togglePanel,
         ),
       ),
     );
@@ -643,14 +638,14 @@ class _HomeScreenState extends State<HomeScreen> {
           Icon(Icons.search_off, size: 80, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
-            'No profiles found',
+            '未找到匹配的资料',
             style: Theme.of(
               context,
             ).textTheme.headlineSmall?.copyWith(color: Colors.grey.shade600),
           ),
           const SizedBox(height: 8),
           Text(
-            'Try adjusting your filters to see more people',
+            '尝试调整筛选条件以查看更多人的资料',
             style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
             textAlign: TextAlign.center,
           ),
@@ -658,7 +653,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ElevatedButton.icon(
             onPressed: _showFilterDialog,
             icon: const Icon(Icons.tune),
-            label: const Text('Adjust Filters'),
+            label: const Text('调整筛选'),
           ),
         ],
       ),

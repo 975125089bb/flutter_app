@@ -28,7 +28,7 @@ class CharacterCard extends StatelessWidget {
               // Main profile image
               Stack(
                 children: [
-                  Container(
+                  SizedBox(
                     width: double.infinity,
                     child: character.imageUrl != null
                         ? Image.network(
@@ -208,7 +208,7 @@ class CharacterCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Profile Details',
+                            '个人资料',
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,

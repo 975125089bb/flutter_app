@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ExpandingFab extends StatefulWidget {
+  const ExpandingFab({super.key});
+
   @override
   _ExpandingFabState createState() => _ExpandingFabState();
 }
