@@ -64,6 +64,10 @@ class Character {
       hasHouse: json['has_house'],
       hasCar: json['has_car'],
       maritalStatus: json['marital_status'],
+      isBookmarked: json['is_bookmarked'] ?? false,
+      isLiked: json['is_liked'] ?? false,
+      isRejected: json['is_rejected'] ?? false,
+      note: json['note'] ?? '',
     );
   }
 
@@ -86,6 +90,10 @@ class Character {
       'has_house': hasHouse,
       'has_car': hasCar,
       'marital_status': maritalStatus,
+      'is_bookmarked': isBookmarked,
+      'is_liked': isLiked,
+      'is_rejected': isRejected,
+      'note': note,
     };
   }
 

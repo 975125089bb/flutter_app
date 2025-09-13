@@ -1,19 +1,54 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import '../data/character.dart';
 import '../models/filter_options.dart';
 
 class CharacterService {
   static List<Character>? _cachedCharacters;
 
-  /// Load characters from the JSON asset file
+  /// Get the local file for storing characters
+  static Future<File> _getLocalFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+    return File('${directory.path}/characters.json');
+  }
+
+  /// Save characters to local storage
+  static Future<void> saveCharacters(List<Character> characters) async {
+    try {
+      final file = await _getLocalFile();
+      final jsonString = json.encode(
+        characters.map((c) => c.toJson()).toList(),
+      );
+      await file.writeAsString(jsonString);
+
+      // Update the cache to match the saved data
+      _cachedCharacters = List<Character>.from(characters);
+    } catch (e) {
+      print('Error saving characters: $e');
+    }
+  }
+
+  /// Load characters from the JSON asset file or local storage
   static Future<List<Character>> loadCharacters() async {
     if (_cachedCharacters != null) {
       return _cachedCharacters!;
     }
 
     try {
-      // Load the JSON file from assets
+      // First, try to load from local storage
+      final file = await _getLocalFile();
+      if (await file.exists()) {
+        final jsonString = await file.readAsString();
+        final List<dynamic> jsonList = json.decode(jsonString);
+        _cachedCharacters = jsonList
+            .map((json) => Character.fromJson(json))
+            .toList();
+        return _cachedCharacters!;
+      }
+
+      // If no local file, load from assets
       final String jsonString = await rootBundle.loadString(
         'assets/test_characters.json',
       );

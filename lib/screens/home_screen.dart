@@ -221,25 +221,29 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleBookmark(Character character) {
+    final index = _allCharacters.indexWhere((c) => c.id == character.id);
     setState(() {
-      final index = _allCharacters.indexWhere((c) => c.id == character.id);
       if (index != -1) {
         _allCharacters[index] = _allCharacters[index].copyWith(
           isBookmarked: !_allCharacters[index].isBookmarked,
         );
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _allCharacters[index].isBookmarked
-                  ? '已将 ${character.name} 添加到收藏夹'
-                  : '已将 ${character.name} 从收藏夹移除',
-            ),
-            duration: const Duration(seconds: 1),
-          ),
-        );
       }
     });
+
+    CharacterService.saveCharacters(_allCharacters);
+
+    if (index != -1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _allCharacters[index].isBookmarked
+                ? '已将 ${character.name} 添加到收藏夹'
+                : '已将 ${character.name} 从收藏夹移除',
+          ),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
   void _handleNote(Character character) {
@@ -288,6 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
             });
+            CharacterService.saveCharacters(_allCharacters);
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

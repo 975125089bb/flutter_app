@@ -55,6 +55,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       }
     });
 
+    CharacterService.saveCharacters(_allCharacters);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -113,6 +115,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
                 );
               }
             });
+            CharacterService.saveCharacters(_allCharacters);
             Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
