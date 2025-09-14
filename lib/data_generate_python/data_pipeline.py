@@ -117,8 +117,8 @@ class DataPipeline:
     def run_full_pipeline_with_retry(
         self,
         input_folder: str = "raw_data",
-        csv_output: str = "processed_dating_profiles.csv",
-        json_output: str = "flutter_characters.json",
+        csv_output: str = "output/processed_dating_profiles.csv",
+        json_output: str = "output/flutter_characters.json",
         resume: bool = True,
         save_progress_interval: int = 10,
     ):
@@ -167,8 +167,10 @@ class DataPipeline:
             input_path = Path(input_folder)
             all_processed_people = []
             # Variables already initialized at function start
-            
-            print(f"\n🔐 Data Protection: CSV will be saved incrementally every {save_progress_interval} profiles")
+
+            print(
+                f"\n🔐 Data Protection: CSV will be saved incrementally every {save_progress_interval} profiles"
+            )
             print("   This prevents data loss if the process is interrupted")
 
             # Load previously processed people if resuming
@@ -547,9 +549,8 @@ class DataPipeline:
 
             if processed_people:
                 # Save test results
-                test_csv = "test_profiles.csv"
-                test_json = "test_characters.json"
-                test_dart = "test_characters_data.dart"
+                test_csv = "output/test_profiles.csv"
+                test_json = "output/test_characters.json"
 
                 self.processor.save_to_csv(processed_people, Path(test_csv))
 
@@ -564,7 +565,7 @@ class DataPipeline:
 
                 print(f"\n✅ Test completed successfully!")
                 print(f"📊 Processed {len(processed_people)} profiles")
-                print(f"📁 Test files: {test_csv}, {test_json}, {test_dart}")
+                print(f"📁 Test files: {test_csv}, {test_json}")
                 return True
             else:
                 print("❌ No profiles were processed successfully")

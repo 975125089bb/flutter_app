@@ -50,7 +50,7 @@ class CharacterService {
 
       // If no local file, load from assets
       final String jsonString = await rootBundle.loadString(
-        'assets/test_characters.json',
+        'lib/data_generate_python/output/flutter_characters.json',
       );
       final List<dynamic> jsonList = json.decode(jsonString);
 

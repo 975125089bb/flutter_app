@@ -128,7 +128,7 @@ class CharacterCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            '${character.name}, ${character.age}',
+                            '${character.name.split('_').last}号, ${character.age}岁',
                             style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
