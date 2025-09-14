@@ -667,10 +667,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool _isFiltersActive() {
     return _filterOptions.ageRange != AgeRange.all ||
-        _filterOptions.distanceRange != DistanceRange.anywhere ||
         _filterOptions.selectedInterests.isNotEmpty ||
         _filterOptions.showOnlineOnly ||
         !_filterOptions.hideRejected ||
-        _filterOptions.sortBy != SortBy.distance;
+        _filterOptions.sortBy != SortBy.random;
   }
 }

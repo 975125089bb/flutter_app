@@ -80,12 +80,6 @@ class _FilterDialogState extends State<FilterDialog> {
 
                     const SizedBox(height: 20),
 
-                    // Distance
-                    _buildSectionTitle('距离'),
-                    _buildDistanceSelector(),
-
-                    const SizedBox(height: 20),
-
                     // Property Requirements
                     _buildSectionTitle('财产资产'),
                     _buildPropertyRequirements(),
@@ -224,26 +218,6 @@ class _FilterDialogState extends State<FilterDialog> {
     );
   }
 
-  Widget _buildDistanceSelector() {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 4,
-      children: DistanceRange.values.map((range) {
-        return ChoiceChip(
-          label: Text(range.label),
-          selected: _options.distanceRange == range,
-          onSelected: (selected) {
-            if (selected) {
-              setState(() {
-                _options = _options.copyWith(distanceRange: range);
-              });
-            }
-          },
-        );
-      }).toList(),
-    );
-  }
-
   Widget _buildPropertyRequirements() {
     return Column(
       children: [
@@ -320,8 +294,8 @@ class _FilterDialogState extends State<FilterDialog> {
       children: SortBy.values.map((sort) {
         String label;
         switch (sort) {
-          case SortBy.distance:
-            label = 'Distance';
+          case SortBy.number:
+            label = '番号';
             break;
           case SortBy.age:
             label = 'Age';

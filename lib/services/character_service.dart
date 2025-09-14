@@ -122,11 +122,6 @@ class CharacterService {
         return false;
       }
 
-      // Distance filter
-      if (character.distanceKm > options.distanceRange.max) {
-        return false;
-      }
-
       // House requirement filter
       if (options.requireHouse && (character.hasHouse != true)) {
         return false;
@@ -233,8 +228,12 @@ class CharacterService {
     // Sort the filtered list
     filteredList.sort((a, b) {
       switch (options.sortBy) {
-        case SortBy.distance:
-          return a.distanceKm.compareTo(b.distanceKm);
+        case SortBy.number:
+          // Extract number from ID (profile_X format)
+          int getNumber(String id) {
+            return int.tryParse(id.split("_").last) ?? 0;
+          }
+          return getNumber(a.id).compareTo(getNumber(b.id));
         case SortBy.age:
           return a.age.compareTo(b.age);
         case SortBy.name:

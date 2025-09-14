@@ -1,4 +1,4 @@
-enum SortBy { distance, age, name, height, random }
+enum SortBy { number, age, name, height, random }
 
 enum SexFilter {
   any('Any'),
@@ -48,19 +48,6 @@ enum BMIRange {
   final String label;
 }
 
-enum DistanceRange {
-  nearby(0, 10, 'Within 10km'),
-  close(0, 25, 'Within 25km'),
-  medium(0, 50, 'Within 50km'),
-  far(0, 100, 'Within 100km'),
-  anywhere(0, double.infinity, 'Anywhere');
-
-  const DistanceRange(this.min, this.max, this.label);
-  final double min;
-  final double max;
-  final String label;
-}
-
 enum EducationFilter {
   any('Any'),
   college('College/University'),
@@ -85,7 +72,6 @@ class FilterOptions {
   final AgeRange ageRange;
   final HeightRange heightRange;
   final BMIRange bmiRange;
-  final DistanceRange distanceRange;
   final List<String> selectedInterests;
   final SortBy sortBy;
   final SexFilter sexFilter;
@@ -100,7 +86,6 @@ class FilterOptions {
     this.ageRange = AgeRange.all,
     this.heightRange = HeightRange.all,
     this.bmiRange = BMIRange.all,
-    this.distanceRange = DistanceRange.anywhere,
     this.selectedInterests = const [],
     this.sortBy = SortBy.random,
     this.sexFilter = SexFilter.any,
@@ -116,7 +101,6 @@ class FilterOptions {
     AgeRange? ageRange,
     HeightRange? heightRange,
     BMIRange? bmiRange,
-    DistanceRange? distanceRange,
     List<String>? selectedInterests,
     SortBy? sortBy,
     SexFilter? sexFilter,
@@ -131,7 +115,6 @@ class FilterOptions {
       ageRange: ageRange ?? this.ageRange,
       heightRange: heightRange ?? this.heightRange,
       bmiRange: bmiRange ?? this.bmiRange,
-      distanceRange: distanceRange ?? this.distanceRange,
       selectedInterests: selectedInterests ?? this.selectedInterests,
       sortBy: sortBy ?? this.sortBy,
       sexFilter: sexFilter ?? this.sexFilter,
