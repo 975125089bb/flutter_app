@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import '../data/character.dart';
@@ -205,6 +206,27 @@ class CharacterService {
         if (!hasCommonInterest) return false;
       }
 
+      // Sex filter
+      if (options.sexFilter != SexFilter.any) {
+        final characterGender = character.gender?.toLowerCase();
+        switch (options.sexFilter) {
+          case SexFilter.male:
+            if (characterGender != '男' &&
+                characterGender != 'male' &&
+                characterGender != 'm')
+              return false;
+            break;
+          case SexFilter.female:
+            if (characterGender != '女' &&
+                characterGender != 'female' &&
+                characterGender != 'f')
+              return false;
+            break;
+          case SexFilter.any:
+            break;
+        }
+      }
+
       return true;
     }).toList();
 
@@ -225,8 +247,15 @@ class CharacterService {
           return b.height!.compareTo(
             a.height!,
           ); // Descending order (tall first)
+        case SortBy.random:
+          return 0; // Will be shuffled after sorting
       }
     });
+
+    // Shuffle if random sort is selected
+    if (options.sortBy == SortBy.random) {
+      filteredList.shuffle(Random());
+    }
 
     return filteredList;
   }

@@ -1,4 +1,13 @@
-enum SortBy { distance, age, name, height }
+enum SortBy { distance, age, name, height, random }
+
+enum SexFilter {
+  any('Any'),
+  male('Male'),
+  female('Female');
+
+  const SexFilter(this.label);
+  final String label;
+}
 
 enum AgeRange {
   all(18, 100, 'All ages'),
@@ -79,6 +88,7 @@ class FilterOptions {
   final DistanceRange distanceRange;
   final List<String> selectedInterests;
   final SortBy sortBy;
+  final SexFilter sexFilter;
   final bool showOnlineOnly;
   final bool hideRejected;
   final bool requireHouse;
@@ -92,7 +102,8 @@ class FilterOptions {
     this.bmiRange = BMIRange.all,
     this.distanceRange = DistanceRange.anywhere,
     this.selectedInterests = const [],
-    this.sortBy = SortBy.distance,
+    this.sortBy = SortBy.random,
+    this.sexFilter = SexFilter.any,
     this.showOnlineOnly = false,
     this.hideRejected = true,
     this.requireHouse = false,
@@ -108,6 +119,7 @@ class FilterOptions {
     DistanceRange? distanceRange,
     List<String>? selectedInterests,
     SortBy? sortBy,
+    SexFilter? sexFilter,
     bool? showOnlineOnly,
     bool? hideRejected,
     bool? requireHouse,
@@ -122,6 +134,7 @@ class FilterOptions {
       distanceRange: distanceRange ?? this.distanceRange,
       selectedInterests: selectedInterests ?? this.selectedInterests,
       sortBy: sortBy ?? this.sortBy,
+      sexFilter: sexFilter ?? this.sexFilter,
       showOnlineOnly: showOnlineOnly ?? this.showOnlineOnly,
       hideRejected: hideRejected ?? this.hideRejected,
       requireHouse: requireHouse ?? this.requireHouse,

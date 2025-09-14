@@ -332,6 +332,9 @@ class _FilterDialogState extends State<FilterDialog> {
           case SortBy.height:
             label = 'Height';
             break;
+          case SortBy.random:
+            label = 'Random';
+            break;
         }
         return ChoiceChip(
           label: Text(label),
