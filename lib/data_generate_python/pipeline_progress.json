@@ -1,0 +1,37 @@
+{
+  "completed_profiles": [
+    {
+      "id": "men_100_98",
+      "timestamp": 1757827582.2400415
+    },
+    {
+      "id": "men_100_97",
+      "timestamp": 1757827598.6603262
+    },
+    {
+      "id": "men_100_95",
+      "timestamp": 1757827613.502629
+    },
+    {
+      "id": "men_100_94",
+      "timestamp": 1757827631.2318804
+    },
+    {
+      "id": "men_100_93",
+      "timestamp": 1757827685.236677
+    },
+    {
+      "id": "men_100_92",
+      "timestamp": 1757827704.3035495
+    },
+    {
+      "id": "men_100_91",
+      "timestamp": 1757827719.8977716
+    }
+  ],
+  "failed_profiles": [],
+  "last_updated": 1757827739.9276664,
+  "total_processed": 3,
+  "total_failed": 0,
+  "interrupted": true
+}

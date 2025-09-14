@@ -121,7 +121,7 @@ class FlutterDataConverter:
         return "\\n".join(description_parts)
 
     def _extract_interests(self, hobbies_str: Optional[str]) -> List[str]:
-        """Extract interests from hobbies string - no random defaults"""
+        """Extract and normalize interests from hobbies string - no random defaults"""
         if pd.isna(hobbies_str):
             return []  # Return empty array instead of random defaults
 
@@ -132,7 +132,33 @@ class FlutterDataConverter:
         # Limit to 6 interests and clean up
         interests = [interest for interest in interests[:6] if len(interest) < 10]
 
-        return interests  # Return actual interests or empty array
+        # Normalize interests to avoid redundancy
+        interests = type(self)._normalize_interests(interests)
+
+        return interests  # Return normalized interests or empty array
+
+    @classmethod
+    def _normalize_interests(cls, interests: List[str]) -> List[str]:
+        """Normalize interests to avoid redundancy like '游泳', '读书', '游泳读书'"""
+        if not interests:
+            return []
+
+        # Sort interests by length (shortest first)
+        sorted_interests = sorted(interests, key=len)
+
+        normalized_interests = []
+
+        for interest in sorted_interests:
+            # Check if this interest is a combination of already processed interests
+            is_composite = any(
+                existing in interest and existing != interest
+                for existing in normalized_interests
+            )
+
+            if not is_composite:
+                normalized_interests.append(interest)
+
+        return normalized_interests
 
     def _extract_image_from_text(self, raw_text: Optional[str]) -> Optional[str]:
         """Extract image URL from markdown text"""

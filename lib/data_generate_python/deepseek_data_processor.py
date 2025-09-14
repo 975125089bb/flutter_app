@@ -10,6 +10,21 @@ import requests
 from datetime import datetime
 
 
+def normalize_hobbies(hobbies_str: str) -> List[str]:
+    """Split and normalize hobbies to avoid redundancy"""
+    if not hobbies_str:
+        return []
+
+    # Split by common separators
+    raw_hobbies = re.split(r"[,，;；、\s]+", hobbies_str)
+
+    # Remove empty strings and duplicates
+    unique_hobbies = list(set(hobby.strip() for hobby in raw_hobbies if hobby.strip()))
+
+    # Sort for consistency
+    return sorted(unique_hobbies)
+
+
 @dataclass
 class ProcessedPerson:
     """Data structure for processed person information"""
@@ -64,6 +79,11 @@ class ProcessedPerson:
                 birth_year_int += 1900 if birth_year_int > 30 else 2000
             self.age = current_year - birth_year_int
 
+        # Normalize hobbies to avoid redundancy
+        if self.hobbies:
+            normalized_hobbies = normalize_hobbies(self.hobbies)
+            self.hobbies = ", ".join(normalized_hobbies)
+
 
 class DeepSeekProcessor:
     """Process personal data using DeepSeek API with cost control"""
@@ -73,11 +93,15 @@ class DeepSeekProcessor:
         api_key: str,
         max_requests_per_minute: int = 20,
         delay_between_requests: float = 3.5,
+        max_retries: int = 3,
+        retry_delay: float = 5.0,
     ):
         self.api_key = api_key
         self.base_url = "https://api.deepseek.com/v1/chat/completions"
         self.max_requests_per_minute = max_requests_per_minute
         self.delay_between_requests = delay_between_requests
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
         self.request_count = 0
         self.start_time = time.time()
 
@@ -111,7 +135,7 @@ class DeepSeekProcessor:
 1. 年份转换：81年->1981年，04年->2004年，2位数年份：>30加1900，<=30加2000
 2. 单位转换：自动转换身高体重到厘米和千克
 3. 房车状态：从"有房无车"、"无房有车"等文本中提取布尔值
-4. 合并相似字段：将所有爱好合并为一个字符串
+4. ：将所有爱好合并为一个字符串合并相似字段
 5. 只返回JSON，不要其他文字说明
 6. 不要提取性别信息（系统会自动处理）
 
@@ -136,7 +160,32 @@ class DeepSeekProcessor:
         time.sleep(self.delay_between_requests)
 
     def call_api(self, text: str) -> Dict[str, Any]:
-        """Make API call to DeepSeek"""
+        """Make API call with retry logic and rate limiting"""
+
+        for attempt in range(self.max_retries + 1):  # +1 for initial attempt
+            try:
+                return self._make_api_request(text)
+            except requests.exceptions.RequestException as e:
+                if attempt < self.max_retries:
+                    wait_time = self.retry_delay * (2**attempt)  # Exponential backoff
+                    print(
+                        f"⚠️  API request failed (attempt {attempt + 1}/{self.max_retries + 1}): {e}"
+                    )
+                    print(f"🔄 Retrying in {wait_time:.1f} seconds...")
+                    time.sleep(wait_time)
+                else:
+                    print(
+                        f"❌ API request failed after {self.max_retries + 1} attempts: {e}"
+                    )
+                    return {}
+            except Exception as e:
+                print(f"❌ Unexpected error during API call: {e}")
+                return {}
+
+        return {}
+
+    def _make_api_request(self, text: str) -> Dict[str, Any]:
+        """Make the actual API request (internal method)"""
         self.rate_limit_control()
 
         headers = {
@@ -155,31 +204,31 @@ class DeepSeekProcessor:
             "stream": False,
         }
 
-        try:
-            response = requests.post(
-                self.base_url, headers=headers, json=payload, timeout=30
+        response = requests.post(
+            self.base_url, headers=headers, json=payload, timeout=30
+        )
+
+        # Handle specific HTTP status codes
+        if response.status_code == 429:  # Rate limit exceeded
+            print("⚠️  Rate limit exceeded, waiting longer...")
+            time.sleep(self.retry_delay * 2)
+            raise requests.exceptions.RequestException("Rate limit exceeded")
+        elif response.status_code >= 500:  # Server errors
+            raise requests.exceptions.RequestException(
+                f"Server error: {response.status_code}"
             )
-            response.raise_for_status()
 
-            result = response.json()
-            content = result["choices"][0]["message"]["content"].strip()
+        response.raise_for_status()
 
-            # Extract JSON from response
-            json_match = re.search(r"\{.*\}", content, re.DOTALL)
-            if json_match:
-                return json.loads(json_match.group())
-            else:
-                print(f"No JSON found in response: {content}")
-                return {}
+        result = response.json()
+        content = result["choices"][0]["message"]["content"].strip()
 
-        except requests.exceptions.RequestException as e:
-            print(f"API request failed: {e}")
-            return {}
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error: {e}")
-            return {}
-        except Exception as e:
-            print(f"Unexpected error: {e}")
+        # Extract JSON from response
+        json_match = re.search(r"\{.*\}", content, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group())
+        else:
+            print(f"⚠️  No JSON found in response: {content}")
             return {}
 
     def extract_person_blocks(self, content: str) -> List[Dict[str, str]]:
@@ -194,6 +243,7 @@ class DeepSeekProcessor:
         for i in range(1, len(splits)):
             person_id = i
             person_content = splits[i]
+            person_number = None
 
             if "\n" in person_content:
 
@@ -210,7 +260,9 @@ class DeepSeekProcessor:
                 )
 
             if person_content:
-                person_blocks.append({"id": person_id, "content": person_content})
+                person_blocks.append(
+                    {"id": person_id, "content": person_content, "番号": person_number}
+                )  # id is assigned by my code, 番号 is assigned by the administrator
 
         return person_blocks
 

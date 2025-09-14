@@ -236,7 +236,28 @@ class CharacterService {
     for (final character in characters) {
       allInterests.addAll(character.interests);
     }
-    return allInterests.toList()..sort();
+    return normalizeInterests(allInterests.toList())..sort();
+  }
+
+  static List<String> normalizeInterests(List<String> interests) {
+    // Sort interests by length (shortest first)
+    final sortedInterests = List<String>.from(interests)
+      ..sort((a, b) => a.length.compareTo(b.length));
+
+    final normalizedInterests = <String>{};
+
+    for (final interest in sortedInterests) {
+      // Check if this interest is a combination of already processed interests
+      bool isComposite = normalizedInterests.any(
+        (existing) => interest != existing && interest.contains(existing),
+      );
+
+      if (!isComposite) {
+        normalizedInterests.add(interest);
+      }
+    }
+
+    return normalizedInterests.toList()..sort();
   }
 
   static List<Character> getBookmarkedCharacters(List<Character> characters) {
