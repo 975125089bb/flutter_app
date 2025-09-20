@@ -68,6 +68,12 @@ class _FilterDialogState extends State<FilterDialog> {
 
                     const SizedBox(height: 20),
 
+                    // Gender
+                    _buildSectionTitle('性别'),
+                    _buildGenderSelector(),
+
+                    const SizedBox(height: 20),
+
                     // Height Range
                     _buildSectionTitle('身高范围'),
                     _buildHeightRangeSelector(),
@@ -190,6 +196,26 @@ class _FilterDialogState extends State<FilterDialog> {
             if (selected) {
               setState(() {
                 _options = _options.copyWith(heightRange: range);
+              });
+            }
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildGenderSelector() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: SexFilter.values.map((gender) {
+        return ChoiceChip(
+          label: Text(gender.label),
+          selected: _options.sexFilter == gender,
+          onSelected: (selected) {
+            if (selected) {
+              setState(() {
+                _options = _options.copyWith(sexFilter: gender);
               });
             }
           },

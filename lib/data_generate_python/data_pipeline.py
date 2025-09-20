@@ -282,7 +282,7 @@ class DataPipeline:
                         )
 
                         # Determine gender from filename
-                        gender = "male" if "men_" in file_path.name else "female"
+                        gender = "female" if "women_" in file_path.name else "male"
 
                         try:
                             extracted_info = self.processor.call_api(block["content"])
