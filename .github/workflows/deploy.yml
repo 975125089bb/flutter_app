@@ -23,11 +23,18 @@ jobs:
       - name: Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.32.4
           channel: 'stable'
           cache: true
+      
+      - name: Show versions (sanity check)
+        run: |
+          flutter --version
+          dart --version
+      
       - run: flutter --version
       - run: flutter pub get
-      - run: flutter build web --web-renderer html --base-href /${{ steps.version.outputs.repository }}/
+      - run: flutter build web --release --web-renderer html --base-href /${{ steps.version.outputs.repository }}/
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
