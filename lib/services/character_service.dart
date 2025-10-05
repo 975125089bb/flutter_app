@@ -16,65 +16,110 @@ class CharacterService {
     return File('${directory.path}/characters.json');
   }
 
-  /// Save characters to local storage (not available on web)
+  /// Save characters to local storage
   static Future<void> saveCharacters(List<Character> characters) async {
-    // Skip saving on web platform since path_provider is not available
-    if (kIsWeb) {
-      // Update the cache anyway
-      _cachedCharacters = List<Character>.from(characters);
-      return;
-    }
-
     try {
+      // Skip local file operations on web platforms
+      if (kIsWeb) {
+        print('🌐 CharacterService: Web platform - saving to cache only (no local file)');
+        _cachedCharacters = List<Character>.from(characters);
+        
+        final bookmarkedCount = characters.where((c) => c.isBookmarked).length;
+        print('💾 CharacterService: Cache updated with $bookmarkedCount bookmarked characters');
+        return;
+      }
+
+      print('💾 CharacterService: Saving ${characters.length} characters to local storage...');
       final file = await _getLocalFile();
       final jsonString = json.encode(
         characters.map((c) => c.toJson()).toList(),
       );
       await file.writeAsString(jsonString);
+      print('💾 CharacterService: Characters saved successfully to ${file.path}');
 
       // Update the cache to match the saved data
       _cachedCharacters = List<Character>.from(characters);
+      
+      // Count bookmarks for verification
+      final bookmarkedCount = characters.where((c) => c.isBookmarked).length;
+      print('💾 CharacterService: Cache updated with $bookmarkedCount bookmarked characters');
     } catch (e) {
-      print('Error saving characters: $e');
+      print('❌ CharacterService: Error saving characters: $e');
     }
   }
 
   /// Load characters from the JSON asset file or local storage
   static Future<List<Character>> loadCharacters() async {
+    print('🔄 CharacterService: Starting loadCharacters...');
+
     if (_cachedCharacters != null) {
+      print(
+        '✅ CharacterService: Returning cached characters (${_cachedCharacters!.length} items)',
+      );
       return _cachedCharacters!;
     }
 
     try {
-      // Only try to load from local storage on non-web platforms
+      // Skip local file operations on web platforms
       if (!kIsWeb) {
-        // First, try to load from local storage
+        // First, try to load from local storage (only on non-web platforms)
         final file = await _getLocalFile();
+        print('📁 CharacterService: Checking local file: ${file.path}');
+
         if (await file.exists()) {
+          print('✅ CharacterService: Local file exists, loading...');
           final jsonString = await file.readAsString();
+          print('📄 CharacterService: Local file size: ${jsonString.length} characters');
+          
           final List<dynamic> jsonList = json.decode(jsonString);
           _cachedCharacters = jsonList
               .map((json) => Character.fromJson(json))
               .toList();
+              
+          final bookmarkedCount = _cachedCharacters!.where((c) => c.isBookmarked).length;
+          print(
+            '✅ CharacterService: Loaded ${_cachedCharacters!.length} characters from local file with $bookmarkedCount bookmarks',
+          );
           return _cachedCharacters!;
         }
+      } else {
+        print('🌐 CharacterService: Web platform detected, skipping local file operations');
       }
 
-      // Load from assets
+      print('📱 CharacterService: Loading from assets...');
+      print(
+        '🔍 CharacterService: Attempting to load: assets/data/flutter_characters.json',
+      );
+
+      // Load from assets (works on all platforms)
       final String jsonString = await rootBundle.loadString(
         'assets/data/flutter_characters.json',
       );
-      
+
+      print(
+        '✅ CharacterService: Asset loaded successfully, JSON length: ${jsonString.length}',
+      );
+
       final List<dynamic> jsonList = json.decode(jsonString);
+      print(
+        '✅ CharacterService: JSON parsed successfully, ${jsonList.length} items found',
+      );
 
       // Convert JSON to Character objects
       _cachedCharacters = jsonList
           .map((json) => Character.fromJson(json))
           .toList();
 
+      print(
+        '✅ CharacterService: Successfully loaded ${_cachedCharacters!.length} characters from assets',
+      );
       return _cachedCharacters!;
     } catch (e) {
-      print('Error loading characters: $e');
+      print('❌ CharacterService: Error loading characters: $e');
+      print('❌ CharacterService: Error type: ${e.runtimeType}');
+      if (e is FlutterError) {
+        print('❌ CharacterService: FlutterError details: ${e.toString()}');
+      }
       // Return empty list if there's an error
       return [];
     }
@@ -301,7 +346,12 @@ class CharacterService {
   }
 
   static List<Character> getBookmarkedCharacters(List<Character> characters) {
-    return characters.where((character) => character.isBookmarked).toList();
+    final bookmarked = characters.where((character) => character.isBookmarked).toList();
+    print('📑 CharacterService: Found ${bookmarked.length} bookmarked characters out of ${characters.length} total');
+    if (bookmarked.isNotEmpty) {
+      print('📑 CharacterService: Bookmarked character IDs: ${bookmarked.map((c) => c.id).join(', ')}');
+    }
+    return bookmarked;
   }
 
   static int getCompatibilityScore(
