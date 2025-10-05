@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import '../data/character.dart';
@@ -15,8 +16,15 @@ class CharacterService {
     return File('${directory.path}/characters.json');
   }
 
-  /// Save characters to local storage
+  /// Save characters to local storage (not available on web)
   static Future<void> saveCharacters(List<Character> characters) async {
+    // Skip saving on web platform since path_provider is not available
+    if (kIsWeb) {
+      // Update the cache anyway
+      _cachedCharacters = List<Character>.from(characters);
+      return;
+    }
+
     try {
       final file = await _getLocalFile();
       final jsonString = json.encode(
@@ -38,21 +46,25 @@ class CharacterService {
     }
 
     try {
-      // First, try to load from local storage
-      final file = await _getLocalFile();
-      if (await file.exists()) {
-        final jsonString = await file.readAsString();
-        final List<dynamic> jsonList = json.decode(jsonString);
-        _cachedCharacters = jsonList
-            .map((json) => Character.fromJson(json))
-            .toList();
-        return _cachedCharacters!;
+      // Only try to load from local storage on non-web platforms
+      if (!kIsWeb) {
+        // First, try to load from local storage
+        final file = await _getLocalFile();
+        if (await file.exists()) {
+          final jsonString = await file.readAsString();
+          final List<dynamic> jsonList = json.decode(jsonString);
+          _cachedCharacters = jsonList
+              .map((json) => Character.fromJson(json))
+              .toList();
+          return _cachedCharacters!;
+        }
       }
 
-      // If no local file, load from assets
+      // Load from assets
       final String jsonString = await rootBundle.loadString(
-        'lib/data_generate_python/output/flutter_characters.json',
+        'assets/data/flutter_characters.json',
       );
+      
       final List<dynamic> jsonList = json.decode(jsonString);
 
       // Convert JSON to Character objects
