@@ -173,13 +173,15 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
       _bookmarkedCharacters = CharacterService.getBookmarkedCharacters(
         _allCharacters,
       );
-      
+
       // Reset page index if it's out of bounds
       if (_currentPageIndex >= _bookmarkedCharacters.length) {
-        _currentPageIndex = _bookmarkedCharacters.isEmpty ? 0 : _bookmarkedCharacters.length - 1;
+        _currentPageIndex = _bookmarkedCharacters.isEmpty
+            ? 0
+            : _bookmarkedCharacters.length - 1;
       }
     });
-    
+
     // Ensure the PageController is in sync
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_pageController.hasClients && _bookmarkedCharacters.isNotEmpty) {
@@ -196,22 +198,23 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
 
   void _toggleBookmark(Character character) {
     final wasBookmarked = character.isBookmarked;
-    
+
     setState(() {
       final index = _allCharacters.indexWhere((c) => c.id == character.id);
       if (index != -1) {
         _allCharacters[index] = _allCharacters[index].copyWith(
           isBookmarked: !_allCharacters[index].isBookmarked,
         );
-        
+
         // Update bookmarks list
         final oldBookmarkCount = _bookmarkedCharacters.length;
         _loadBookmarks();
-        
+
         // If we removed a bookmark, adjust page index
         if (wasBookmarked && _bookmarkedCharacters.length < oldBookmarkCount) {
           // If we removed the last item and there are still items, go to previous page
-          if (_currentPageIndex >= _bookmarkedCharacters.length && _bookmarkedCharacters.isNotEmpty) {
+          if (_currentPageIndex >= _bookmarkedCharacters.length &&
+              _bookmarkedCharacters.isNotEmpty) {
             _currentPageIndex = _bookmarkedCharacters.length - 1;
           }
           // If no bookmarks left, reset to 0
@@ -321,79 +324,84 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             ),
           ],
         ),
-      body: _isLoading
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text(
-                    'Loading bookmarks...',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            )
-          : _bookmarkedCharacters.isEmpty
-          ? _buildEmptyState()
-          : Column(
-              children: [
-                // Swipeable area - exactly like home screen
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: _bookmarkedCharacters.length,
-                    onPageChanged: (index) {
-                      setState(() => _currentPageIndex = index);
-                    },
-                    itemBuilder: (context, index) {
-                      final character = _bookmarkedCharacters[index];
-                      return CharacterCard(
-                        character: character,
-                        onBookmark: () => _toggleBookmark(character),
-                        onNote: () => _handleNote(character),
-                      );
-                    },
-                  ),
-                ),
-                // Page Indicator - exactly like home screen
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${_currentPageIndex + 1} of ${_bookmarkedCharacters.length}',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
+        body: _isLoading
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text(
+                      'Loading bookmarks...',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
-                      const SizedBox(width: 16),
-                      Container(
-                        width: 100,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(2),
+                    ),
+                  ],
+                ),
+              )
+            : _bookmarkedCharacters.isEmpty
+            ? _buildEmptyState()
+            : Column(
+                children: [
+                  // Swipeable area - exactly like home screen
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: _bookmarkedCharacters.length,
+                      onPageChanged: (index) {
+                        setState(() => _currentPageIndex = index);
+                      },
+                      itemBuilder: (context, index) {
+                        final character = _bookmarkedCharacters[index];
+                        return CharacterCard(
+                          character: character,
+                          onBookmark: () => _toggleBookmark(character),
+                          onNote: () => _handleNote(character),
+                        );
+                      },
+                    ),
+                  ),
+                  // Page Indicator - exactly like home screen
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${_currentPageIndex + 1} of ${_bookmarkedCharacters.length}',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
                         ),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: (_currentPageIndex + 1) / _bookmarkedCharacters.length,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
-                              borderRadius: BorderRadius.circular(2),
+                        const SizedBox(width: 16),
+                        Container(
+                          width: 100,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor:
+                                (_currentPageIndex + 1) /
+                                _bookmarkedCharacters.length,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
       ),
     );
   }

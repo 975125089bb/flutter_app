@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/character.dart';
 import '../models/filter_options.dart';
 
@@ -19,30 +20,60 @@ class CharacterService {
   /// Save characters to local storage
   static Future<void> saveCharacters(List<Character> characters) async {
     try {
-      // Skip local file operations on web platforms
+      // Web platform: Save to cache and browser's local storage
       if (kIsWeb) {
-        print('🌐 CharacterService: Web platform - saving to cache only (no local file)');
+        print(
+          '🌐 CharacterService: Web platform - saving to cache and local storage',
+        );
         _cachedCharacters = List<Character>.from(characters);
-        
-        final bookmarkedCount = characters.where((c) => c.isBookmarked).length;
-        print('💾 CharacterService: Cache updated with $bookmarkedCount bookmarked characters');
+
+        // Save bookmark state to browser's local storage
+        final prefs = await SharedPreferences.getInstance();
+
+        // Save bookmarked character IDs
+        final bookmarkedIds = characters
+            .where((c) => c.isBookmarked)
+            .map((c) => c.id)
+            .toList();
+        await prefs.setStringList('bookmarked_characters', bookmarkedIds);
+
+        // Save notes as JSON
+        final notesMap = <String, String>{};
+        for (var character in characters) {
+          if (character.note.isNotEmpty) {
+            notesMap[character.id] = character.note;
+          }
+        }
+        await prefs.setString('character_notes', json.encode(notesMap));
+
+        final bookmarkedCount = bookmarkedIds.length;
+        print(
+          '💾 CharacterService: Local storage updated - $bookmarkedCount bookmarks, ${notesMap.length} notes',
+        );
         return;
+      } else {
+        // save on Android/iOS/Windows/macOS using local storage
+        print(
+          '💾 CharacterService: Saving ${characters.length} characters to local storage...',
+        );
+        final file = await _getLocalFile();
+        final jsonString = json.encode(
+          characters.map((c) => c.toJson()).toList(),
+        );
+        await file.writeAsString(jsonString);
+        print(
+          '💾 CharacterService: Characters saved successfully to ${file.path}',
+        );
+
+        // Update the cache to match the saved data
+        _cachedCharacters = List<Character>.from(characters);
+
+        // Count bookmarks for verification
+        final bookmarkedCount = characters.where((c) => c.isBookmarked).length;
+        print(
+          '💾 CharacterService: Cache updated with $bookmarkedCount bookmarked characters',
+        );
       }
-
-      print('💾 CharacterService: Saving ${characters.length} characters to local storage...');
-      final file = await _getLocalFile();
-      final jsonString = json.encode(
-        characters.map((c) => c.toJson()).toList(),
-      );
-      await file.writeAsString(jsonString);
-      print('💾 CharacterService: Characters saved successfully to ${file.path}');
-
-      // Update the cache to match the saved data
-      _cachedCharacters = List<Character>.from(characters);
-      
-      // Count bookmarks for verification
-      final bookmarkedCount = characters.where((c) => c.isBookmarked).length;
-      print('💾 CharacterService: Cache updated with $bookmarkedCount bookmarked characters');
     } catch (e) {
       print('❌ CharacterService: Error saving characters: $e');
     }
@@ -52,6 +83,7 @@ class CharacterService {
   static Future<List<Character>> loadCharacters() async {
     print('🔄 CharacterService: Starting loadCharacters...');
 
+    // Return cached data if available
     if (_cachedCharacters != null) {
       print(
         '✅ CharacterService: Returning cached characters (${_cachedCharacters!.length} items)',
@@ -60,69 +92,108 @@ class CharacterService {
     }
 
     try {
-      // Skip local file operations on web platforms
+      // Try loading from local file (desktop/mobile only)
       if (!kIsWeb) {
-        // First, try to load from local storage (only on non-web platforms)
-        final file = await _getLocalFile();
-        print('📁 CharacterService: Checking local file: ${file.path}');
-
-        if (await file.exists()) {
-          print('✅ CharacterService: Local file exists, loading...');
-          final jsonString = await file.readAsString();
-          print('📄 CharacterService: Local file size: ${jsonString.length} characters');
-          
-          final List<dynamic> jsonList = json.decode(jsonString);
-          _cachedCharacters = jsonList
-              .map((json) => Character.fromJson(json))
-              .toList();
-              
-          final bookmarkedCount = _cachedCharacters!.where((c) => c.isBookmarked).length;
-          print(
-            '✅ CharacterService: Loaded ${_cachedCharacters!.length} characters from local file with $bookmarkedCount bookmarks',
-          );
+        final localData = await _loadFromLocalFile();
+        if (localData != null) {
+          _cachedCharacters = localData;
           return _cachedCharacters!;
         }
+        // If no local file exists, fall back to loading from assets
+        _cachedCharacters = await _loadFromAssets();
+        print(
+          '✅ CharacterService: Successfully loaded ${_cachedCharacters!.length} characters from assets',
+        );
+        return _cachedCharacters!;
       } else {
-        print('🌐 CharacterService: Web platform detected, skipping local file operations');
+        // Load from assets and restore web state if needed
+        _cachedCharacters = await _loadFromAssets();
+
+        await _restoreWebState();
+
+        print(
+          '✅ CharacterService: Successfully loaded ${_cachedCharacters!.length} characters',
+        );
+        return _cachedCharacters!;
+      }
+    } catch (e) {
+      print(
+        '❌ CharacterService: Error loading characters: $e (${e.runtimeType})',
+      );
+      return [];
+    }
+  }
+
+  /// Load characters from local file (desktop/mobile only)
+  static Future<List<Character>?> _loadFromLocalFile() async {
+    try {
+      final file = await _getLocalFile();
+      print('� CharacterService: Checking local file: ${file.path}');
+
+      if (!await file.exists()) {
+        return null;
       }
 
-      print('📱 CharacterService: Loading from assets...');
-      print(
-        '🔍 CharacterService: Attempting to load: assets/data/flutter_characters.json',
-      );
-
-      // Load from assets (works on all platforms)
-      final String jsonString = await rootBundle.loadString(
-        'assets/data/flutter_characters.json',
-      );
-
-      print(
-        '✅ CharacterService: Asset loaded successfully, JSON length: ${jsonString.length}',
-      );
-
+      final jsonString = await file.readAsString();
       final List<dynamic> jsonList = json.decode(jsonString);
-      print(
-        '✅ CharacterService: JSON parsed successfully, ${jsonList.length} items found',
-      );
-
-      // Convert JSON to Character objects
-      _cachedCharacters = jsonList
+      final characters = jsonList
           .map((json) => Character.fromJson(json))
           .toList();
 
+      final bookmarkedCount = characters.where((c) => c.isBookmarked).length;
       print(
-        '✅ CharacterService: Successfully loaded ${_cachedCharacters!.length} characters from assets',
+        '✅ CharacterService: Loaded ${characters.length} characters from local file ($bookmarkedCount bookmarks)',
       );
-      return _cachedCharacters!;
+
+      return characters;
     } catch (e) {
-      print('❌ CharacterService: Error loading characters: $e');
-      print('❌ CharacterService: Error type: ${e.runtimeType}');
-      if (e is FlutterError) {
-        print('❌ CharacterService: FlutterError details: ${e.toString()}');
-      }
-      // Return empty list if there's an error
-      return [];
+      print('⚠️ CharacterService: Failed to load from local file: $e');
+      return null;
     }
+  }
+
+  /// Load characters from assets
+  static Future<List<Character>> _loadFromAssets() async {
+    print('CharacterService: Loading from assets/data/flutter_characters.json');
+
+    final jsonString = await rootBundle.loadString(
+      'assets/data/flutter_characters.json',
+    );
+    final List<dynamic> jsonList = json.decode(jsonString);
+
+    print(
+      '✅ CharacterService: Asset loaded (${jsonList.length} items, ${jsonString.length} chars)',
+    );
+
+    return jsonList.map((json) => Character.fromJson(json)).toList();
+  }
+
+  /// Restore user state from browser local storage (web only)
+  static Future<void> _restoreWebState() async {
+    print('🌐 CharacterService: Restoring web state from local storage');
+
+    final prefs = await SharedPreferences.getInstance();
+
+    // Load saved state
+    final bookmarkedIds = prefs.getStringList('bookmarked_characters') ?? [];
+
+    final notesJson = prefs.getString('character_notes');
+    final notesMap = notesJson != null
+        ? Map<String, String>.from(json.decode(notesJson))
+        : <String, String>{};
+
+    // Convert lists to sets for O(1) lookup performance
+    final bookmarkedSet = bookmarkedIds.toSet();
+
+    // Apply saved state to characters (optimized with set lookups)
+    for (var character in _cachedCharacters!) {
+      character.isBookmarked = bookmarkedSet.contains(character.id);
+      character.note = notesMap[character.id] ?? '';
+    }
+
+    print(
+      '✅ CharacterService: Restored state - ${bookmarkedIds.length} bookmarks, ${notesMap.length} notes',
+    );
   }
 
   /// Clear the cache to force reload on next call
@@ -134,6 +205,18 @@ class CharacterService {
   static Future<List<Character>> reloadCharacters() async {
     clearCache();
     return await loadCharacters();
+  }
+
+  /// Clear all saved data from local storage (web only)
+  static Future<void> clearLocalStorage() async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('bookmarked_characters');
+      await prefs.remove('character_notes');
+      print(
+        '🗑️ CharacterService: Cleared all data from browser local storage',
+      );
+    }
   }
 
   /// Get a character by ID
@@ -346,10 +429,16 @@ class CharacterService {
   }
 
   static List<Character> getBookmarkedCharacters(List<Character> characters) {
-    final bookmarked = characters.where((character) => character.isBookmarked).toList();
-    print('📑 CharacterService: Found ${bookmarked.length} bookmarked characters out of ${characters.length} total');
+    final bookmarked = characters
+        .where((character) => character.isBookmarked)
+        .toList();
+    print(
+      '📑 CharacterService: Found ${bookmarked.length} bookmarked characters out of ${characters.length} total',
+    );
     if (bookmarked.isNotEmpty) {
-      print('📑 CharacterService: Bookmarked character IDs: ${bookmarked.map((c) => c.id).join(', ')}');
+      print(
+        '📑 CharacterService: Bookmarked character IDs: ${bookmarked.map((c) => c.id).join(', ')}',
+      );
     }
     return bookmarked;
   }
